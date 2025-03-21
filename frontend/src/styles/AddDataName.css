@@ -1,0 +1,130 @@
+.main-container {
+    display: flex;
+    align-items: center; 
+    justify-content: flex-start; 
+    gap: 0px; /* Space between the image and content */
+    max-width: 100%;
+    margin-left: -150px;
+    margin-right: auto;
+    margin-top: 5;
+  }
+  
+  .image-container {
+    flex-shrink: 0;
+  }
+  
+  .image {
+    width: 75%;
+    height: auto;
+    border-radius: 8px; 
+  }
+  
+  .flex.justify-center {
+    display: flex;
+    justify-content: center; 
+    width: 100%; 
+    margin-top: 32px; 
+  }
+
+  
+  .select {
+    margin-top: 10px;
+    border: solid #fff;
+    padding: 10px;
+    font-size: 1rem;
+    color: rgb(0, 0, 0);
+    width: 100%;
+    border-radius: 8px;
+  }
+
+  button {
+    font-size: 1rem;
+    padding: 12px 30px;
+    font-weight: bold;
+    border-radius: 30px;
+    background-color: #c2dfe3;
+    box-shadow: 0 1px 1px #c2dfe3(0, 0, 0, 0.25);
+    border: 1px solid #c2dfe3;
+    cursor: pointer;
+    color: black;
+  
+    margin: 0 auto;
+  }
+  
+  button:hover {
+    background: #3e4245; 
+  }
+  
+
+
+
+
+
+
+
+
+.search-input {
+  width: 100%;
+  padding: 8px;
+  font-size: 16px;
+  margin-bottom: 10px;
+  border-radius: 4px;
+}
+
+.dropdown-list {
+  position: absolute;
+  background-color: rgb(255, 255, 255);
+  width: 100%;
+  border: 1px solid #ddd;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1000;
+  margin-top: 2px;
+  border-radius: 4px;
+  color: black;
+}
+
+.dropdown-list li {
+  padding: 8px;
+  cursor: pointer;
+}
+
+.dropdown-list li:hover {
+  background-color: #a1a1a1;
+}
+
+.counter-text {
+  font-size: 1rem; 
+  color: rgb(0, 0, 0);   
+  margin-left: 5px;
+  margin-top: 5px;
+}
+
+.header-section {
+  margin-bottom: 10px;
+  background-color: #000000;  
+  color: white;          
+  text-align: center;    
+}
+
+.content-container {
+  width: 100%;
+  flex-grow: 1;                    
+  background-color: #f7f6f6;  
+  padding: 10px;                  
+  border: 0.5px solid #d8d7d7; 
+
+  min-width: 380px; 
+  min-height: 340px;
+  flex-grow: 1; 
+  padding: 20px; 
+  border-radius: 10px; 
+}
+.search-input {
+  width: 100%; 
+  padding: 8px;
+  border-radius: 10px;
+  margin: 0 auto;
+  display: block;
+  border: 0.5px solid #9a9a9a; 
+}

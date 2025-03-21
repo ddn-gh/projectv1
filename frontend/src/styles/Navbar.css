@@ -1,0 +1,29 @@
+.navbar {
+  position: fixed;
+  top: 0;        
+  left: 0;     
+  width: 100%;    
+  z-index: 1000;  
+  background-color: #9db4c0; 
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-nav {
+  margin-left: auto; 
+}
+
+.navbar-nav .nav-item {
+  margin-right: 40px; 
+}
+
+.navbar-nav .nav-item .nav-link {
+  transition: color 0.3s ease, background-color 0.3s ease;
+}
+
+.navbar-nav .nav-item .nav-link:hover {
+  color: #ffffff;
+}
+
+body {
+  padding-top: 60px; 
+}

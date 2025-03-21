@@ -1,0 +1,176 @@
+
+.report-page {
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  min-height: 100vh;
+  position: relative; 
+  width: 90%;
+}
+
+.query-container { 
+  margin-bottom: 20px; 
+  margin-top: 110px;
+  border: 2px solid #e7e7e7; 
+  padding: 20px;
+  position: sticky;
+  top: 100px; 
+  z-index: 10; 
+}
+
+.test-id-container {
+  margin-bottom: 10px;
+}
+.test-id-container label {
+  display: block;
+  margin-bottom: 0;
+}
+.test-id-input-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+.test-id-input,
+.search-btn {
+  box-sizing: border-box;
+  height: 40px;
+  padding: 8px;
+}
+.test-id-input {
+  width: 80%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+}
+.search-btn {
+  background-color: #ffffff;
+  color: rgb(0, 0, 0);
+  border: 1px solid #d7d6d6;
+  border-radius: 9px;
+  cursor: pointer;
+  width: 20%;
+  margin-top: -0.5px;
+}
+.search-btn:hover {
+  background-color: #007BFF;
+  color: white;
+}
+.inputs-row {
+  display: flex;
+  gap: 15px;
+  margin-top: 20px;
+}
+.inputs-row > div {
+  flex: 1;
+}
+.inputs-row label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.inputs-row input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+}
+.table-container {
+  margin-top: 40px;
+  max-height: 400px;  
+  overflow-y: auto; 
+  position: relative;
+}
+.table-wrapper {
+  overflow-x: auto;
+}
+
+  /*
+.table-wrapper {
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 500px; 
+  scroll-behavior: smooth;
+}
+*/
+
+.report-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.report-table th,
+.report-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+.report-table th {
+  background-color: #f4f4f4;
+}
+.export-button-container {
+  margin-top: 50px;
+  text-align: center;
+}
+.export-btn {
+  background-color: #007BFF;
+  color: white;
+  padding: 10px 15px;
+  text-decoration: none;
+  border-radius: 10px;
+}
+.export-btn:hover {
+  background-color: #0056b3;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+.inputs-row {
+  display: flex;
+  gap: 1rem; /* Add space between inputs */
+}
+
+.input-container {
+  flex: 1; /* This ensures each input takes equal width */
+  display: flex;
+  flex-direction: column;
+}
+
+.input-container input,
+.input-container select {
+  width: 100%; /* Make inputs and select take full width of their container */
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.input-container label {
+  margin-bottom: 10px;
+  font-weight: bold;
+}

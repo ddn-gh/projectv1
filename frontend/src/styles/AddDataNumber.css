@@ -1,0 +1,48 @@
+.wrapper {
+  display: flex;
+  justify-content: space-between;
+  gap: 190px; 
+  margin-top: 100px;
+}
+
+.left-side {
+  width: 10%;
+}
+
+.right-side {
+  flex: 1;
+  width: 100%;
+  margin-left: 250px;
+}
+
+.checkbox-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding-left: 10px; 
+  width: 100%; 
+  margin-top: 20px;
+}
+
+.slider-label {
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+.checkbox-item {
+  margin-top: 10px;
+  margin-bottom: 5px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  justify-content: space-between;
+}
+
+.button-wrapper {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 50px;
+}
