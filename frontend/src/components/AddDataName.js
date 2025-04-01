@@ -42,7 +42,7 @@ const AddDataName = ({ onShowNumberInput, currentInde, dataLength }) => {
   const [filteredAntibiotics, setFilteredAntibiotics] = useState([]);
   const [inputValue, setInputValue] = useState("");
 
-  // Function to fetch previous antibiotics 
+  // Function to fetch previous antibiotics history old
   const fetchAntibioticHistory = async () => {
     if (!testId) return;
     
@@ -53,8 +53,22 @@ const AddDataName = ({ onShowNumberInput, currentInde, dataLength }) => {
           'Authorization': `Bearer ${JSON.parse(token)}`,
         }
       });
+      
+      if (response.data && Array.isArray(response.data)) {
+        // Group antibiotics by their position/index in the test
+        const antibioticsByPosition = {};
 
-
+        response.data.forEach(item => {
+          const zoneIndex = item.zone_index || currentInde - 1; // Use current index if no zone_index
+          
+          if (!antibioticsByPosition[zoneIndex]) {
+            antibioticsByPosition[zoneIndex] = [];
+          }
+          antibioticsByPosition[zoneIndex].push(item.antibiotic_name);
+        });
+        
+        setPreviousAntibiotics(antibioticsByPosition);
+      }
     } catch (error) {
       console.error('Error fetching antibiotic history:', error);
     } finally {
@@ -64,7 +78,15 @@ const AddDataName = ({ onShowNumberInput, currentInde, dataLength }) => {
 
   // Check if the current antibiotic name match previous
   const validateAntibioticName = () => {
+    const currentIndex = currentInde - 1;
+    const previousAntibioticsForPosition = previousAntibiotics[currentIndex] || [];
 
+    // no history (first test)
+    if (previousAntibioticsForPosition.length === 0) {
+      return true;
+    }
+    // if the current antibiotic name match any previous names
+    return previousAntibioticsForPosition.includes(inputValue);
   };
 
   const filterAntibiotics = (value) => {
