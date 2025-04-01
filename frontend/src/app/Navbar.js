@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom'
-import { useAuth ,logout} from '../authen'
+import { useAuth ,logout} from '../auth'
 import "../styles/Navbar.css"
 
 const LoggedInLinks=()=> {
