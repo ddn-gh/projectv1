@@ -9,6 +9,8 @@ class ASTtest(db.Model):
     username = db.Column(db.String(), db.ForeignKey('user.username'), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=True)
     
+    image_filename = db.Column(db.String(), nullable=True)
+    
     user = db.relationship('User', back_populates='tests')
     inhibition_zones = db.relationship('InhibitionZone', back_populates='test')
     history = db.relationship('TestHistory', back_populates='test', overlaps="test_history")
@@ -42,7 +44,7 @@ class TestHistory(db.Model):
     __tablename__ = 'test_history'
     
     history_id = db.Column(db.Integer(), primary_key=True, autoincrement=True)
-    test_id = db.Column(db.Integer(), db.ForeignKey('asttest.test_id', ondelete='SET NULL'), nullable=False) 
+    test_id = db.Column(db.Integer(), db.ForeignKey('asttest.test_id', ondelete='SET NULL'), nullable=True) 
     username = db.Column(db.String(), db.ForeignKey('user.username', ondelete='SET NULL'), nullable=True)  
     old_value = db.Column(db.String(), nullable=True)
     new_value = db.Column(db.String(), nullable=True)

@@ -42,7 +42,7 @@ const AddDataName = ({ onShowNumberInput, currentInde, dataLength }) => {
   const [filteredAntibiotics, setFilteredAntibiotics] = useState([]);
   const [inputValue, setInputValue] = useState("");
 
-  // fetch previous antibiotics history
+  // Function to fetch previous antibiotics 
   const fetchAntibioticHistory = async () => {
     if (!testId) return;
     
@@ -53,21 +53,8 @@ const AddDataName = ({ onShowNumberInput, currentInde, dataLength }) => {
           'Authorization': `Bearer ${JSON.parse(token)}`,
         }
       });
-      
-      if (response.data && Array.isArray(response.data)) {
-        const antibioticsByPosition = {};
 
-        response.data.forEach(item => {
-          const zoneIndex = item.zone_index || currentInde - 1;
-          
-          if (!antibioticsByPosition[zoneIndex]) {
-            antibioticsByPosition[zoneIndex] = [];
-          }
-          antibioticsByPosition[zoneIndex].push(item.antibiotic_name);
-        });
-        
-        setPreviousAntibiotics(antibioticsByPosition);
-      }
+
     } catch (error) {
       console.error('Error fetching antibiotic history:', error);
     } finally {
@@ -77,15 +64,7 @@ const AddDataName = ({ onShowNumberInput, currentInde, dataLength }) => {
 
   // Check if the current antibiotic name match previous
   const validateAntibioticName = () => {
-    const currentIndex = currentInde - 1;
-    const previousAntibioticsForPosition = previousAntibiotics[currentIndex] || [];
 
-    // no history (first test)
-    if (previousAntibioticsForPosition.length === 0) {
-      return true;
-    }
-    // if the current antibiotic name match any previous names
-    return previousAntibioticsForPosition.includes(inputValue);
   };
 
   const filterAntibiotics = (value) => {
@@ -96,7 +75,7 @@ const AddDataName = ({ onShowNumberInput, currentInde, dataLength }) => {
       );
       setFilteredAntibiotics(matches.length > 0 ? matches : ["Antibiotic Name Not Found"]);
     } else {
-      setFilteredAntibiotics([]); // Hide the dropdown if input is empty
+      setFilteredAntibiotics([]); // Hide the dropdown if the input is empty
     }
   };
   const handleSelect = (value) => {
@@ -175,6 +154,7 @@ const AddDataName = ({ onShowNumberInput, currentInde, dataLength }) => {
 
         <div className="content-container">
             <div className="card-header">
+              {/* <p>{currentInde} of {dataLength}</p> */}
               <p>Select Antibiotic name</p>
             </div>
           <div className="card-body">
@@ -199,6 +179,18 @@ const AddDataName = ({ onShowNumberInput, currentInde, dataLength }) => {
                   </li>
                 ))}
               </ul>
+            )}
+            
+            {error && (
+              <div className="error-message mt-2 text-red-500 font-bold bg-white p-2 rounded">
+                {error}
+              </div>
+            )}
+            
+            {isLoading && (
+              <div className="loading-indicator mt-2 text-white">
+                Loading antibiotic history...
+              </div>
             )}
           </div>
         </div>

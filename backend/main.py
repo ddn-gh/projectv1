@@ -6,6 +6,8 @@ from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager, create_access_token, create_refresh_token, jwt_required
 from newTest import newtest_ns
 from auth import auth_ns
+from flask import send_from_directory
+import os
 from flask_cors import CORS
 
 from config import DevConfig
@@ -25,6 +27,12 @@ def create_app():
     
     api.add_namespace(newtest_ns)
     api.add_namespace(auth_ns)
+    
+    @app.route('/uploads/<filename>')
+    def uploaded_file(filename):
+        uploads_dir = os.path.join(os.getcwd(), 'uploads')
+        return send_from_directory(uploads_dir, filename)
+
     
     @app.shell_context_processor
     def make_shell_context():

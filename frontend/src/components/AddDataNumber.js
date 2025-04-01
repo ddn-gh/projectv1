@@ -12,39 +12,6 @@ export default function AddDataNumber({ onNext, onBack, currentInde, dataLength 
   const { testId } = useInputData();
   const [circleRadius, setCircleRadius] = useState(data[2]); 
 
-  useEffect(() => {
-    if (testId) {
-      fetchPreviousData();
-    }
-  }, []);
-  const fetchPreviousData = async () => {
-    setLoading(true);
-    try {
-      const token = localStorage.getItem('REACT_TOKEN_AUTH_KEY');
-      const response = await axios.get(`http://localhost:3000/ASTtest/inhibition_history/${testId}`, {
-        headers: {
-          'Authorization': `Bearer ${JSON.parse(token)}`,
-        }
-      });
-      
-      if (response.data && Array.isArray(response.data) && response.data.length > 0) {
-        const previousData = response.data.filter(item => 
-          item.number_of_test === currentInde
-        );
-        
-        if (previousData.length > 0) {
-          setPreviousRadius(previousData[0].diameter);
-          setPreviousAntibioticName(previousData[0].antibiotic_name);
-          setCircleRadius(previousData[0].diameter);
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching previous data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleSliderChange = (value) => {
     setCircleRadius(value);
   };

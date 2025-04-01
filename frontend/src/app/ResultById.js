@@ -117,13 +117,13 @@ return (
 
       </div>
 
-      {/* Right Section: Display Image with Circles */}
+      {/* Right Section: Image with Circles */}
       <div className="right-section">
-        {image && (
-          <div className="image-container">
-            
-          </div>
-        )}
+      {test?.image_filename && (
+            <div className="image-container">
+              <img src={`http://localhost:3000/uploads/${test.image_filename}`} alt="AST Result" />
+            </div>
+          )}
       </div>
     </div>
 
@@ -136,4 +136,3 @@ return (
 
 };
 export default ResultById;
-

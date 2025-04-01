@@ -20,6 +20,19 @@ from scipy.stats import trim_mean
 from util import resize, moving_average, adjust_brightness
 from scipy.ndimage import median_filter
 from scipy.signal import find_peaks
+import time
+
+UPLOAD_FOLDER = 'uploads'  # โฟลเดอร์สำหรับเก็บภาพ
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def get_latest_edit_number(test_id):
+    # ฟังก์ชันสมมุติ ถ้ายังไม่มี สามารถเปลี่ยนเป็น query count ได้
+    history = InhibitionZoneHistory.query.filter_by(test_id=test_id).order_by(InhibitionZoneHistory.number_of_test.desc()).first()
+    return history.number_of_test if history else 0
 
 class PelletsDetector:
     def __init__(self):
@@ -208,7 +221,8 @@ class PelletsDetector:
         self.inhibition_zone_diam = inhibition_zone_diam
         print(f"Inhibition Zone Pixels: {self.inhibition_zone_pixels}")
         print(f"Inhibition Zone Diameter: {self.inhibition_zone_diam}")
-        
+      
+
 class Interpretator:
     def __init__(self):
         self.test_id = None
@@ -344,7 +358,7 @@ class ProcessImage(Resource):
                 logging.error(f"Error during image processing: {error_message}")
                 return f"Error while process image {str(e)}", 500
 
-            # Convert the processed numpy array back to an image file (e.g., PNG)
+            # Convert the processed numpy array back to an image file
             img_io = BytesIO()
             Image.fromarray(image_array).save(img_io, 'PNG')
             img_io.seek(0)
@@ -363,6 +377,213 @@ class ProcessImage(Resource):
             error_message = str(e) 
             logging.error(f"Unexpected error: {error_message}")
             return f"Error while import image {str(e)}", 500
+
+
+class PelletsDetector2:
+    def __init__(self):
+        self.img_crop = None
+        self.med_circles = None
+        self.plate_circle = None
+        self.plate_radius = None
+        self.scale_factor = None
+        self.med_loc = None
+        self.med_rad = None
+        self.inhibition_zone_diam = None
+        self.inhibition_zone_pixels = None
+        self.pellets = None
+
+    def process_image(self, image):
+        if image is None:
+            return "image not found"
+
+        try:
+            # Step 1: Resize image
+            img = PlateDetector.resize(image, 2000)
+
+            # Step 2: เพิ่ม Contrast / Sharpen ก่อนส่งเข้า PlateDetector
+            img = cv2.equalizeHist(cv2.cvtColor(img, cv2.COLOR_BGR2GRAY))  # convert + histogram equalization
+            img = cv2.GaussianBlur(img, (3, 3), 0)  # blur เล็กน้อยเพื่อลด noise
+            img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)  # convert back to BGR
+
+            # Step 3: Detect plate
+            self.plate_circle = PlateDetector.detect_plate(img)
+            if isinstance(self.plate_circle, np.ndarray):
+                if self.plate_circle.ndim == 3:
+                    self.plate_radius = self.plate_circle[0, 0, 2]
+                elif self.plate_circle.ndim == 2:
+                    self.plate_radius = self.plate_circle[0, 2]
+
+            # Step 4: Crop plate area
+            self.img_crop = PlateDetector.circle_crop(img, self.plate_circle, pad=0, normalize_size=True)
+
+            # Step 5: Detect medicines (ปรับ padding เพิ่มได้)
+            self.med_circles = MedicineDetector.detect(self.img_crop, pad=10)
+
+            if self.med_circles is None or len(self.med_circles[0]) == 0:
+                raise ValueError("No medicine circles detected")
+
+            plate_radius_real = 6.35 / 2
+            self.scale_factor = plate_radius_real / np.mean(self.med_circles[0, :, 2])
+
+            self.med_loc = [(float(self.med_circles[0, i, 0]), float(self.med_circles[0, i, 1])) for i in range(len(self.med_circles[0]))]
+            self.med_rad = [int(np.floor(self.med_circles[0, i, -1])) for i in range(len(self.med_circles[0]))]
+            self.pellets = [PlateDetector.circle_crop(self.img_crop, self.med_circles[0][i].reshape((1, 1, -1)), pad=150, normalize_size=False) for i in range(len(self.med_circles[0]))]
+
+            return self.img_crop
+
+        except Exception as e:
+            print('[process_image] Error:', e)
+            return str(e)
+
+
+    @staticmethod
+    def polar_coord_T(theta, r, cen_p: tuple) -> tuple:
+        theta = 2 * np.pi * theta / 360
+        dx = r * np.cos(theta)
+        dy = r * np.sin(theta)
+        x = dx + cen_p[0]
+        y = dy + cen_p[1]
+        return np.array([x, y]).T
+
+    @staticmethod
+    def img_polar_transfrom(img, cen_p):
+        img_size = img.shape[0]
+        intencities = []
+
+        for r in range(img_size):
+            coor = PelletsDetector2.polar_coord_T(np.arange(0, 360, 1), r, cen_p).astype(int)
+            if np.any(coor <= 0) or np.any(coor >= img_size - 1):
+                break
+            intencities.append(img[coor[:, 1], coor[:, 0]])
+
+        return np.array(intencities)
+
+    @staticmethod
+    def calculate_trimmed_mean(inten, proportion=0.2):
+        return trim_mean(inten, proportion)
+
+    def predict_diameter(self):
+        if self.med_loc is None or self.med_rad is None:
+            raise ValueError("Medicine detection data missing. Please run process_image() first.")
+    
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(3, 3))
+        kernel2 = np.ones((6, 6), np.uint8)
+        closing_list = []
+        inhibition_zone_pixels = []
+        inhibition_zone_diam = []
+
+        for i in range(len(self.med_loc)):
+            img_polar = self.img_polar_transfrom(self.img_crop, self.med_loc[i])
+            img_clahe = clahe.apply(img_polar)
+            sharpened = cv2.filter2D(img_clahe, -1, np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]]))
+
+            blurred_image = cv2.GaussianBlur(sharpened, (5, 5), 0)
+            blurred_image = median_filter(blurred_image, size=5)
+            erosion = cv2.erode(blurred_image, kernel2, iterations=1)
+            dilation = cv2.dilate(erosion, kernel2, iterations=1)
+            closing = cv2.morphologyEx(dilation, cv2.MORPH_CLOSE, kernel2)
+
+            sharpened = cv2.addWeighted(closing, 1.5, np.zeros(closing.shape, closing.dtype), 0, 0.3)
+            normalized = cv2.normalize(sharpened, None, 0, 255, cv2.NORM_MINMAX)
+            closing_list.append(normalized.astype(np.uint8))
+
+        for i, img in enumerate(closing_list):
+            sorted_img = np.sort(img, axis=0)
+            intensity_r = [self.calculate_trimmed_mean(inten) for inten in sorted_img[:440]]
+            y = np.array(intensity_r).astype(float) / 255 * 100
+            y_mavg = moving_average(y, 3)
+            y_mavg[:self.med_rad[0]] = 100
+
+            all_change_points = []
+            for x in range(0, 360, 5):
+                angle_profile = sorted_img[:, x] / 255 * 100
+                angle_y_mavg = moving_average(angle_profile, 3)
+                angle_y_mavg[:self.med_rad[0]] = 100
+
+                angle_dy = np.diff(angle_y_mavg)
+                angle_dy[:self.med_rad[0] + 20] = np.abs(angle_dy[:self.med_rad[0] + 20])
+
+                threshold = np.mean(moving_average(abs(angle_dy), 3)) / np.std(angle_dy) + 0.45
+                angle_change_points = np.arange(0, len(angle_dy), 2)[angle_dy[::2] > threshold]
+                all_change_points.extend(angle_change_points)
+
+            img_width = img.shape[0]
+            max_height = min(450, img_width)
+            filtered_change_points = [cp for cp in all_change_points if cp < max_height]
+
+            bins = np.arange(0, max_height, 5)
+            hist, bin_edges = np.histogram(filtered_change_points, bins=72)
+            bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+
+            non_zero_bins = np.where(hist > 0)[0]
+            if not non_zero_bins.any():
+                selected_peak_index = 0
+            else:
+                first_bar_index = non_zero_bins[0]
+                max_bin_index = np.argmax(hist)
+                peaks, _ = find_peaks(hist, height=0.2 * np.max(hist))
+                peaks_after = [p for p in peaks if p >= first_bar_index + 10]
+
+                if len(peaks) > 5:
+                    selected_peak_index = max_bin_index
+                else:
+                    if first_bar_index <= max_bin_index < first_bar_index + 10:
+                        selected_peak_index = max_bin_index if hist[max_bin_index] >= 0.7 * hist[first_bar_index] else first_bar_index
+                    else:
+                        selected_peak_index = max_bin_index
+                    if peaks_after:
+                        selected_peak_index = peaks_after[0]
+
+            most_frequent_y_range = bin_centers[first_bar_index] if hist[selected_peak_index] <= 35 else bin_centers[selected_peak_index]
+            predict_radius = most_frequent_y_range - self.med_rad[i]
+            inhibition_zone_diam.append(round((self.med_rad[i] + predict_radius) * self.scale_factor * 2, 2))
+            inhibition_zone_pixels.append(int(self.med_rad[i] + predict_radius))
+
+        self.inhibition_zone_pixels = inhibition_zone_pixels
+        self.inhibition_zone_diam = inhibition_zone_diam
+
+        print(f"Inhibition Zone Pixels: {self.inhibition_zone_pixels}")
+        print(f"Inhibition Zone Diameter: {self.inhibition_zone_diam}")
+
+@newtest_ns.route('/draw_zones') 
+class DrawZones(Resource):
+    def post(self):
+        try:
+            if 'image' not in request.files:
+                return {"error": "Image file missing"}, 400
+            
+            image_file = request.files['image']
+            file_bytes = np.frombuffer(image_file.read(), np.uint8)
+            original_image = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
+
+            if original_image is None:
+                return {"error": "Failed to decode image"}, 400
+            print(original_image)
+            # เรียก process_image ก่อน
+            detector = PelletsDetector2()
+            result = detector.process_image(original_image)
+
+            # ถ้าไม่มีข้อมูลจากการตรวจยา ให้ return error
+            if detector.med_loc is None or detector.med_rad is None:
+                return {"error": "Medicine detection data missing. Please ensure clear image and try again."}, 400
+
+            detector.predict_diameter()
+
+            # วาดจุดลงบนภาพ
+            for loc, diam in zip(detector.med_loc, detector.inhibition_zone_pixels):
+                x, y = int(loc[0]), int(loc[1])
+                cv2.circle(original_image, (x, y), int(diam), (0, 255, 0), 3)  # วงเขียว
+                cv2.circle(original_image, (x, y), 5, (0, 0, 255), -1)         # จุดแดงกลาง
+
+            _, buffer = cv2.imencode('.png', original_image)
+            img_io = BytesIO(buffer.tobytes())
+            img_io.seek(0)
+
+            return send_file(img_io, mimetype='image/png')
+
+        except Exception as e:
+            return {"error": str(e)}, 500
+
 
 @newtest_ns.route('/test_info')   
 class PostMedData(Resource):
@@ -424,39 +645,59 @@ def get_latest_edit_number(test_id):
 
     return latest_edit if latest_edit is not None else 0
 
+import json
 @newtest_ns.route('/add_data')
 class AddData(Resource):
-    @newtest_ns.marshal_with(ast_test_model)
-    @newtest_ns.expect(ast_test_model)
-    @newtest_ns.marshal_with(inhibition_zone_model)
-    @newtest_ns.expect(inhibition_zone_model)
-    @newtest_ns.marshal_with(inhibition_zone_history_model)
-    @newtest_ns.expect(inhibition_zone_history_model)
     @jwt_required()
     def post(self):
         try:
-            new_data = request.get_json()
+            # เช็คภาพ
+            if 'image' not in request.files:
+                return {"error": "Image file missing"}, 400
+
+            image = request.files['image']
+            if not image or not allowed_file(image.filename):
+                return {"error": "Invalid image file"}, 400
+
+            # รับข้อมูล JSON จาก form field ชื่อ 'data'
+            data_json = request.form.get('data')
+            if not data_json:
+                return {"error": "Missing data"}, 400
+
+            new_data = json.loads(data_json)
             test_id = new_data['testId']
             bacteria_name = new_data['bacteriaName']
             username = new_data['username']
             new_data_points = new_data.get('newDataPoint')
             created_at = new_data.get('createdAt')
-            
-            if not test_id or not bacteria_name or not new_data_points:
-                return {"error": "Missing required fields"}, 400
 
-            output_test = None
-            output_inhibition = [] 
+            # ตั้งชื่อไฟล์รูปภาพ
+            timestamp = int(time.time())
+            ext = image.filename.rsplit('.', 1)[1].lower()
+            filename = secure_filename(f"{test_id}_{timestamp}.{ext}")
+            filepath = os.path.join(UPLOAD_FOLDER, filename)
+            image.save(filepath)
+
+            # เตรียมการเขียนข้อมูล
+            output_inhibition = []
             output_history = []
 
             existing_test = ASTtest.query.filter_by(test_id=test_id).first()
-            
             if existing_test:
                 existing_test.update(bacteria_name, username)
-                output_test = existing_test
-
+                existing_test.image_filename = filename
                 number_of_edit = get_latest_edit_number(test_id)
-                InhibitionZone.query.filter_by(test_id=test_id).delete() 
+                InhibitionZone.query.filter_by(test_id=test_id).delete()
+            else:
+                existing_test = ASTtest(
+                    test_id=test_id,
+                    bacteria_name=bacteria_name,
+                    username=username,
+                    created_at=created_at,
+                    image_filename=filename
+                )
+                db.session.add(existing_test)
+                number_of_edit = 0
 
             for newData in new_data_points:
                 antibiotic_name = newData['antibiotic_name']
@@ -464,36 +705,43 @@ class AddData(Resource):
                 resistant = newData['resistant']
 
                 inhibition_zone = InhibitionZone(
-                    test_id = test_id,
-                    antibiotic_name = antibiotic_name,
-                    diameter = inhibition_diam,
-                    resistant = resistant,
-                    username = username,
-                    created_at = created_at
+                    test_id=test_id,
+                    antibiotic_name=antibiotic_name,
+                    diameter=inhibition_diam,
+                    resistant=resistant,
+                    username=username,
+                    created_at=created_at
                 )
                 db.session.add(inhibition_zone)
 
                 history_entry = InhibitionZoneHistory(
-                    test_id = inhibition_zone.test_id,
-                    number_of_test = number_of_edit + 1,  # Increment edit number
-                    antibiotic_name = inhibition_zone.antibiotic_name,
-                    diameter = inhibition_zone.diameter,
-                    resistant = inhibition_zone.resistant,
-                    username = inhibition_zone.username,
-                    edit_at = datetime.utcnow()  # Timestamp the edit
+                    test_id=test_id,
+                    number_of_test=number_of_edit + 1,
+                    antibiotic_name=antibiotic_name,
+                    diameter=inhibition_diam,
+                    resistant=resistant,
+                    username=username,
+                    edit_at=datetime.utcnow()
                 )
                 db.session.add(history_entry)
+
                 output_inhibition.append(inhibition_zone)
                 output_history.append(history_entry)
-            
+
             db.session.commit()
 
-            return {"history": output_history, "inhibitions": output_inhibition}, 201
-        
-        except (Exception, psycopg2.Error) as e:
-            print(e)
-            return (f"error{e}", 500)
-     
+            return {
+                "message": "Data and image saved successfully",
+                "image_filename": filename,
+                "history_count": len(output_history),
+                "zone_count": len(output_inhibition)
+            }, 201
+
+        except Exception as e:
+            print("Error:", e)
+            return {"error": str(e)}, 500
+
+
 @newtest_ns.route('/med_info')   
 class GetMedInfo(Resource):
     def get(self):
@@ -621,6 +869,7 @@ class GetDataByTestID(Resource):
             "test_id": fields.Integer(),
             "bacteria_name": fields.String(),
             "username": fields.String(),
+            "image_filename": fields.String(),
             "created_at" : fields.DateTime()
             })),
         'inhibition_zones': fields.List(fields.Nested({
