@@ -93,6 +93,15 @@ const AddDataName = ({ onShowNumberInput, currentInde, dataLength }) => {
     }
   }, []);
 
+  const handleUpdateData = () => {
+    updateData(antibioticname);
+    onShowNumberInput(); // เมื่อคลิกปุ่ม Update Name ให้แสดง AddDataNumber แทน
+  };
+  const eventUpdateData = (e) => {
+    e.preventDefault();
+    handleUpdateData();
+  };
+
   return (
     <form className="flex flex-col items-center w-full" onSubmit={eventUpdateData}>
       <div className="main-container flex items-center justify-start gap-8 mb-8">
