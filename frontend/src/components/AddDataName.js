@@ -15,9 +15,7 @@ const AddDataName = ({ onShowNumberInput, currentInde, dataLength }) => {
   const navigate = useNavigate();
   const token = localStorage.getItem('REACT_TOKEN_AUTH_KEY');
   const [error, setError] = useState("");
-  const [previousAntibiotics, setPreviousAntibiotics] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
 
   const antibioticList = [": Penicillin", "AMC: Amoxicillin-clavulanate", "AMK: Amikacin", "AMP: Ampicillin", 
     "ATM: Aztreonam", "AZM: Azithromycin", "CAT: Cefetamet", "CAZ: Ceftazidime", "CDR: Cefdinir", "CEC: Cefaclor", 
@@ -41,53 +39,6 @@ const AddDataName = ({ onShowNumberInput, currentInde, dataLength }) => {
 
   const [filteredAntibiotics, setFilteredAntibiotics] = useState([]);
   const [inputValue, setInputValue] = useState("");
-
-  // Function to fetch previous antibiotics history old
-  const fetchAntibioticHistory = async () => {
-    if (!testId) return;
-    
-    setIsLoading(true);
-    try {
-      const response = await axios.get(`http://localhost:3000/ASTtest/inhibition_history/${testId}`, {
-        headers: {
-          'Authorization': `Bearer ${JSON.parse(token)}`,
-        }
-      });
-      
-      if (response.data && Array.isArray(response.data)) {
-        // Group antibiotics by their position/index in the test
-        const antibioticsByPosition = {};
-
-        response.data.forEach(item => {
-          const zoneIndex = item.zone_index || currentInde - 1; // Use current index if no zone_index
-          
-          if (!antibioticsByPosition[zoneIndex]) {
-            antibioticsByPosition[zoneIndex] = [];
-          }
-          antibioticsByPosition[zoneIndex].push(item.antibiotic_name);
-        });
-        
-        setPreviousAntibiotics(antibioticsByPosition);
-      }
-    } catch (error) {
-      console.error('Error fetching antibiotic history:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Check if the current antibiotic name match previous
-  const validateAntibioticName = () => {
-    const currentIndex = currentInde - 1;
-    const previousAntibioticsForPosition = previousAntibiotics[currentIndex] || [];
-
-    // no history (first test)
-    if (previousAntibioticsForPosition.length === 0) {
-      return true;
-    }
-    // if the current antibiotic name match any previous names
-    return previousAntibioticsForPosition.includes(inputValue);
-  };
 
   const filterAntibiotics = (value) => {
     setInputValue(value);
@@ -127,7 +78,6 @@ const AddDataName = ({ onShowNumberInput, currentInde, dataLength }) => {
     }
   };
   useEffect(() => {
-    fetchAntibioticHistory();
     if (dataLength > 0 && dataLength < currentInde) {
       try {
         setNewDataPoint(newData);
@@ -142,24 +92,6 @@ const AddDataName = ({ onShowNumberInput, currentInde, dataLength }) => {
       navigate('/result');
     }
   }, []);
-
-  useEffect(() => {
-    if (data && data.length > 0) {
-      setImages(data[3]);
-    }
-  }, [data]);
-  const handleUpdateData = () => {
-    if (!validateAntibioticName() && Object.keys(previousAntibiotics).length > 0) {
-      alert("Please input previous Antibiotic name");
-      return;
-    }
-    updateData(antibioticname || inputValue);
-    onShowNumberInput();
-  };
-  const eventUpdateData = (e) => {
-    e.preventDefault();
-    handleUpdateData();
-  };
 
   return (
     <form className="flex flex-col items-center w-full" onSubmit={eventUpdateData}>
