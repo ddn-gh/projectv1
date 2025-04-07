@@ -81,6 +81,9 @@ class InhibitionZone(db.Model):
 
     antibiotic_name = db.Column(db.String(), nullable=True)
     diameter = db.Column(db.Float(), nullable=True)
+    
+    pixel = db.Column(db.Float(), nullable=True)
+    
     resistant = db.Column(db.String(), nullable=True)
     username = db.Column(db.String(), db.ForeignKey('user.username'), nullable=True)
     created_at = db.Column(db.DateTime, nullable=True)
