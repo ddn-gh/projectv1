@@ -38,7 +38,7 @@ const ReportPage = () => {
   };
 
   const fetchReportData = () => {
-    let url = '/ASTtest/report/search?';
+    let url = 'http://localhost:3001/ASTtest/report/search?';
 
     if (testId) url += `test_id=${testId}&`;
     if (username) url += `username=${username}&`;

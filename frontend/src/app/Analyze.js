@@ -11,7 +11,7 @@ const AnalyzeImage = () => {
 
     const fetchDataFromApi = async () => {
         try {
-            const response = await axios.get('http://localhost:3000/ASTtest/med_info');
+            const response = await axios.get('http://localhost:3001/ASTtest/med_info');
             const responseData = response.data
             if (responseData) {
                 setDataSet(responseData);

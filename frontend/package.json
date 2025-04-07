@@ -7,9 +7,18 @@
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.2.0",
     "@testing-library/user-event": "^13.5.0",
+    "axios": "^1.8.4",
+    "bootstrap": "^5.3.3",
+    "jwt-decode": "^4.0.0",
+    "rc-slider": "^11.1.8",
     "react": "^19.0.0",
+    "react-bootstrap": "^2.10.9",
+    "react-csv": "^2.2.2",
     "react-dom": "^19.0.0",
+    "react-hook-form": "^7.55.0",
+    "react-router-dom": "^7.4.1",
     "react-scripts": "5.0.1",
+    "react-token-auth": "^2.3.8",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
