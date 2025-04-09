@@ -260,101 +260,25 @@ const AddDataName = ({ onShowNumberInput, currentInde, dataLength }) => {
   const [filteredAntibiotics, setFilteredAntibiotics] = useState([]);
   const [inputValue, setInputValue] = useState("");
 
-  const antibioticList = [
-    ": Penicillin",
-    "AMC: Amoxicillin-clavulanate",
-    "AMK: Amikacin",
-    "AMP: Ampicillin",
-    "ATM: Aztreonam",
-    "AZM: Azithromycin",
-    "CAT: Cefetamet",
-    "CAZ: Ceftazidime",
-    "CDR: Cefdinir",
-    "CEC: Cefaclor",
-    "CFM: Cefixime",
-    "CFP: Cefoperazone",
-    "CHL: Chloramphenicol",
-    "CID: Cefonicid",
-    "CIN: Cinoxacin",
-    "CIP: Ciprofloxacin",
-    "CLR: Clarithromycin",
-    "CMZ: Cefmetazole",
-    "COL: Colistin",
-    "COP/POL: Colistin or polymyxin B",
-    "CPD: Cefpodoxime",
-    "CPR: Cefprozil",
-    "CPT: Ceftaroline",
-    "CRO: Ceftriaxone",
-    "CTB: Ceftibuten",
-    "CTT: Cefotetan",
-    "CTX: Cefotaxime",
-    "CXM: Cefuroxime",
-    "CXM: Cefuroxime (parenteral)",
-    "CZA: Ceftazidime-avibactam",
-    "CZO: Cefazolin",
-    "CZO: Cefazolin (surrogate test for oral cephalosporins and uncomplicated UTIs)",
-    "CZT: Ceftolozane-tazobactam",
-    "CZX: Ceftizoxime",
-    "DAL: Dalbavancin",
-    "DOR: Doripenem",
-    "DOX: Doxycycline",
-    "ENX: Enoxacin",
-    "ERY: Erythromycin",
-    "ETP: Ertapenem",
-    "FDC: Cefonicid",
-    "FEP: Cefepime",
-    "FLE: Fleroxacin",
-    "FOS: Fosfomycin",
-    "FOX: Cefoxitin",
-    "GAT: Gatifloxacin",
-    "GEM: Gemifloxacin",
-    "GEN: Gentamicin",
-    "GRX: Grepafloxacin",
-    "IMR: Imipenem-relebactam",
-    "IPM: Imipenem",
-    "KAN: Kanamycin",
-    "LNZ: Linezolid",
-    "LOM: Lomefloxacin",
-    "LOR: Loracarbef",
-    "LVX: Levofloxacin",
-    "MAN: Cefamandole",
-    "MEC: Mecillinam",
-    "MEM: Meropenem",
-    "MEV: Meropenem-vaborbactam",
-    "MFX: Moxifloxacin",
-    "MNO: Minocycline",
-    "MOX: Moxalactam",
-    "NAL: Nalidixic acid",
-    "NET: Netilmicin",
-    "NIT: Nitrofurantoin",
-    "NOR: Norfloxacin",
-    "OFX: Ofloxacin",
-    "ORI: Oritavancin",
-    "PEF: Pefloxacin (surrogate test for ciprofloxacin)",
-    "PIP: Piperacillin",
-    "POL: Polymyxin B",
-    "PRL: Pirlimycin",
-    "QDA: Quinupristin-dalfopristin",
-    "RIF: Rifampin",
-    "SAM: Ampicillin-sulbactam",
-    "SAMSAM: Ampicillin-sulbactam",
-    "SPX: Sparfloxacin",
-    "SSS: Sulfonamides",
-    "STR: Streptomycin",
-    "SXT: Trimethoprim- sulfamethoxazole",
-    "SXT: Trimethoprim-sulfamethoxazole",
-    "TCC: Ticarcillin-clavulanate",
-    "TCY: Tetracycline",
-    "TEC: Teicoplanin",
-    "TGC: Tigecycline",
-    "TLV: Telavancin",
-    "TMP: Trimethoprim",
-    "TOB: Tobramycin",
-    "TVA: Trovafloxacin",
-    "TZD: Tedizolid",
-    "TZP: Piperacillin-tazobactam",
-    "VAN: Vancomycin",
-  ];
+  const antibioticList = [": Penicillin", "AMC: Amoxicillin-clavulanate", "AMK: Amikacin", "AMP: Ampicillin", 
+        "ATM: Aztreonam", "AZM: Azithromycin", "CAT: Cefetamet", "CAZ: Ceftazidime", "CDR: Cefdinir", "CEC: Cefaclor", 
+        "CFM: Cefixime", "CFP: Cefoperazone", "CHL: Chloramphenicol", "CID: Cefonicid", "CIN: Cinoxacin", 
+        "CIP: Ciprofloxacin", "CLR: Clarithromycin", "CMZ: Cefmetazole", "COL: Colistin", "COP/POL: Colistin or polymyxin B", 
+        "CPD: Cefpodoxime", "CPR: Cefprozil", "CPT: Ceftaroline", "CRO: Ceftriaxone", "CTB: Ceftibuten", "CTT: Cefotetan", 
+        "CTX: Cefotaxime", "CXM: Cefuroxime", "CXM: Cefuroxime (parenteral)", "CZA: Ceftazidime-avibactam", "CZO: Cefazolin", 
+        "CZO: Cefazolin (surrogate test for oral cephalosporins and uncomplicated UTIs)", "CZT: Ceftolozane-tazobactam", 
+        "CZX: Ceftizoxime", "DAL: Dalbavancin", "DOR: Doripenem", "DOX: Doxycycline", "ENX: Enoxacin", "ERY: Erythromycin", 
+        "ETP: Ertapenem", "FDC: Cefonicid", "FEP: Cefepime", "FLE: Fleroxacin", "FOS: Fosfomycin", "FOX: Cefoxitin", 
+        "GAT: Gatifloxacin", "GEM: Gemifloxacin", "GEN: Gentamicin", "GRX: Grepafloxacin", "IMR: Imipenem-relebactam", 
+        "IPM: Imipenem", "KAN: Kanamycin", "LNZ: Linezolid", "LOM: Lomefloxacin", "LOR: Loracarbef", "LVX: Levofloxacin", 
+        "MAN: Cefamandole", "MEC: Mecillinam", "MEM: Meropenem", "MEV: Meropenem-vaborbactam", "MFX: Moxifloxacin", 
+        "MNO: Minocycline", "MOX: Moxalactam", "NAL: Nalidixic acid", "NET: Netilmicin", "NIT: Nitrofurantoin", "NOR: Norfloxacin", 
+        "OFX: Ofloxacin", "ORI: Oritavancin", "PEF: Pefloxacin (surrogate test for ciprofloxacin)", "PIP: Piperacillin", 
+        "POL: Polymyxin B", "PRL: Pirlimycin", "QDA: Quinupristin-dalfopristin", "RIF: Rifampin", "SAM: Ampicillin-sulbactam", 
+        "SAMSAM: Ampicillin-sulbactam", "SPX: Sparfloxacin", "SSS: Sulfonamides", "STR: Streptomycin", "SXT: Trimethoprim- sulfamethoxazole", 
+        "SXT: Trimethoprim-sulfamethoxazole", "TCC: Ticarcillin-clavulanate", "TCY: Tetracycline", "TEC: Teicoplanin", 
+        "TGC: Tigecycline", "TLV: Telavancin", "TMP: Trimethoprim", "TOB: Tobramycin", "TVA: Trovafloxacin", "TZD: Tedizolid", 
+        "TZP: Piperacillin-tazobactam", "VAN: Vancomycin"];
   const testId = localStorage.getItem("testId");
 
   // Function to fetch previous antibiotics history old
@@ -450,12 +374,20 @@ const AddDataName = ({ onShowNumberInput, currentInde, dataLength }) => {
       );
 
       console.log("response", response.data);
-
-      setTestData(response.data);
+      // Check if medLocations is in the response
+      if (response.data.medLocations) {
+        // Store medicine locations in localStorage for use in ResultPage
+        localStorage.setItem("medLocations", JSON.stringify(response.data.medLocations));
+      }
+      // Set test data from the response
+      setTestData(response.data.antibioticData || response.data);
+      //setTestData(response.data);
     } catch (error) {
       console.error("Error fetching data:", error.message);
     }
   };
+
+
   useEffect(() => {
     fetchAntibioticHistory();
     if (dataLength > 0 && dataLength < currentInde) {

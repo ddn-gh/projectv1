@@ -164,6 +164,7 @@ const CreateNewTestPage = () => {
         }
       );
 
+
       if (!response.ok) {
         if (response.status === 401) {
           const authData = JSON.parse(localStorage.getItem("auth"));

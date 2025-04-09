@@ -106,8 +106,7 @@
     height: 100%;
     overflow: hidden; 
     display: flex;
-    justify-content: center; /* Center the image within the container */
-
+    justify-content: center; 
   }
   
   .right-section img {
@@ -115,7 +114,6 @@
     height: auto; 
     border-radius: 10px; 
   }
-  
 
 .antibiotic-item {
   margin-bottom: 10px;
@@ -123,7 +121,131 @@
 
 
 
+.content-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  margin-top: 64px;
+}
 
+.left-section {
+  flex: 1 1 60%;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.right-section {
+  flex: 1 1 35%;
+  padding: 16px;
+  background-color: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+}
+
+.image-container {
+  width: 100%;
+  max-width: 420px;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.right-section img {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  object-fit: contain;
+}
+
+.box {
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 16px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  padding: 20px;
+}
+
+.box-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #dc3545;
+  margin-bottom: 16px;
+}
+
+.header-sectionby {
+  margin-top: 16px;
+  font-weight: 600;
+}
+.info-item {
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 1rem;
+  margin-bottom: 10px;
+}
+
+.info-item label {
+  margin-right: 8px;
+}
+
+.antibiotic-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.95rem;
+  margin-bottom: 10px;
+  padding-bottom: 4px;
+  border-bottom: 1px dashed #ff0000;
+}
+
+.antibiotic-item:last-child {
+  border-bottom: none;
+}
+
+.button-container {
+  display: flex;
+
+  gap: 40px;
+  margin: 40px 0 20px;
+}
+.button-create {
+  margin: 0 0 40px 0;
+  border-radius: 50px;
+  padding: 10px 30px;
+  font-size: 1rem;
+  font-weight: bold;
+  background-color: #0ca4bb;
+  color: white;
+  border: none;
+  transition: background-color 0.3s ease;
+}
+
+.button-create:hover {
+  background-color: #088a9f;
+} 
+
+
+
+
+/* add */
+.image-container {
+  position: relative;
+  display: inline-block;
+}
+
+.medicine-label {
+  position: absolute;
+  background-color: rgba(255, 255, 255, 0.8);
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+  border: 1px solid #333;
+  z-index: 10;
+  pointer-events: none; /* Prevents the label from interfering with clicks */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
 
 
 
