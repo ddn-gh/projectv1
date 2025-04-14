@@ -402,7 +402,7 @@ class PelletsDetector:
         print("================================")
 
 detector = PelletsDetector()
-image_path = "img for test/13.jpg"
+image_path = "image-for-test/13.jpg"
 result = detector.process_image(image_path)
 
 detector.debug_print()

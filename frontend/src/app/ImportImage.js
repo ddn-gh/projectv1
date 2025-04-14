@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom'; 
 import { useImageContext } from '../components/useImageContext';
 import '../styles/ImportImage.css';
@@ -9,6 +9,12 @@ const ImportImage = () => {
     const [loading, setLoading] = useState(false);
     const [processedImage, setProcessedImage] = useState(image || null); 
     const navigate = useNavigate();
+
+    const [isEditMode, setIsEditMode] = useState(false);
+    useEffect(() => {
+      const editStatus = localStorage.getItem("edit_status") === "true";
+      setIsEditMode(editStatus);
+    }, []);
   
     const handleDrop = (e) => {
       e.preventDefault();
@@ -88,7 +94,7 @@ const ImportImage = () => {
               {processedImage && processedImage instanceof Blob ? (
                 <img src={URL.createObjectURL(processedImage)} alt="Uploaded Image" className="uploaded-image" />
               ) : (
-                <p>Drag & Drop or Click to Upload</p>
+                <p>Click to Upload</p>
               )}
             </div>
             <label className="status-text">

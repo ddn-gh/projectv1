@@ -173,10 +173,10 @@ const CreateNewTestPage = () => {
           const result = await response.json();
           alert(
             result.message ||
-              "ไม่สามารถเพิ่มได้ เนื่องจาก Test ID นี้มีอยู่ในระบบแล้ว"
+              "Test ID already exist"
           );
         } else {
-          alert("เกิดข้อผิดพลาดบางอย่าง กรุณาลองใหม่อีกครั้ง");
+          alert("Error : try again");
         }
         return;
       }
@@ -185,7 +185,7 @@ const CreateNewTestPage = () => {
       navigate("/import");
     } catch (error) {
       console.error("Error:", error);
-      alert("ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์");
+      alert("Server error");
     }
   };
 
@@ -225,16 +225,12 @@ const CreateNewTestPage = () => {
           >
             <option value="">Select a bacteria</option>
             <option value="Enterobacterales">Enterobacterales</option>
-            <option value="Pseudomonas aeruginosa">
-              Pseudomonas aeruginosa
-            </option>
+            <option value="Pseudomonas aeruginosa">Pseudomonas aeruginosa</option>
             <option value="Acinetobacter spp.">Acinetobacter spp.</option>
-            <option value="Burkholderia cepacia complex">
-              Burkholderia cepacia complex
-            </option>
-            <option value="Stenotrophomonas maltophilia">
-              Stenotrophomonas maltophilia
-            </option>
+            <option value="Streptococcus pneumoniae">Streptococcus pneumoniae</option>
+            <option value="Neisseria gonorrhoeae">Neisseria gonorrhoeae</option>
+            <option value="Burkholderia cepacia complex">Burkholderia cepacia complex</option>
+            <option value="Stenotrophomonas maltophilia">Stenotrophomonas maltophilia</option>
             <option value="Enterococcus spp.">Enterococcus spp.</option>
             <option value="Haemophilus influenzae and Haemophilus parainfluenzae">
               Haemophilus influenzae and Haemophilus parainfluenzae

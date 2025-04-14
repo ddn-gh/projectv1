@@ -210,7 +210,7 @@ const ResultById = () => {
   return (
     <div className="result-container">
       <div className="header-section">
-        <p className="result-subtitle">Test resulsst</p>
+        <p className="result-subtitle">Test result</p>
       </div>
       <div className="content-wrapper">
         <div className="left-section">
@@ -241,30 +241,22 @@ const ResultById = () => {
           </div>
 
           <div className="box">
-            <div className="box-content">
-              <p className="box-title">Antibiotics and Diameter</p>
-              {testResult &&
-                testResult.map((data, index) => (
-                  <div
-                    key={index}
-                    className="antibiotic-item"
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                    }}
-                  >
-                    <div style={{ display: "flex", alignItems: "center" }}>
-                      <label>{`${data.antibiotic_name} : `}</label>
-                      <label>{` ${data.diameter} mm`}</label>
-                    </div>
-                    {data.resistant && (
-                      <label>{`Interpretation ${data.resistant}`}</label>
-                    )}
-                  </div>
-                ))}
+          <div className="box-content">
+            <p className="box-title">Antibiotics and Diameter</p>
+            {testResult && testResult.map((data, index) => (
+              <div key={index} className="antibiotic-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <label>{`${data.antibiotic_name} : `}</label>
+                <label>&nbsp;&nbsp;{data.diameter} mm</label>
+              </div>
+              {/* {data.resistant && ( <label>{`Interpretation ${data.resistant}`}</label>)} */}
+              {data.resistant && data.resistant.trim() !== '' && (
+                <label>{`Interpretation ${data.resistant}`}</label>
+              )}
             </div>
+            ))}
           </div>
+        </div>
         </div>
 
         {/* Right Section: Image with Circles */}

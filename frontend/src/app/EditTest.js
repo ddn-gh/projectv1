@@ -281,6 +281,10 @@ const EditTestPage = () => {
 
   const handleEditImage = async (e) => {
     e.preventDefault();
+
+    // Set edit status in localStorage : ADD
+    localStorage.setItem("edit_status", "true");
+
     const token = localStorage.getItem("REACT_TOKEN_AUTH_KEY");
     const payload = {
       test_id: testData.test_id,

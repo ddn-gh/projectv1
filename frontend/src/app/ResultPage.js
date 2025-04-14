@@ -1,19 +1,20 @@
-// import React, { createContext, useState, useEffect, useRef } from 'react';
-// import { useInputData } from '../components/useInputData';
-// import { useNavigate, useLocation } from 'react-router-dom'
-// import axios from 'axios';
-// import { jwtDecode } from 'jwt-decode';
-// import { useImageContext } from '../components/useImageContext';
-// import DrawCircle from '../components/draw_circle';
-// import '../styles/ResultById.css';
+// import React, { createContext, useState, useEffect, useRef } from "react";
+// import { useInputData } from "../components/useInputData";
+// import { useNavigate, useLocation } from "react-router-dom";
+// import axios from "axios";
+// import { jwtDecode } from "jwt-decode";
+// import { useImageContext } from "../components/useImageContext";
+// import "../styles/ResultById.css";
 
 // const ResultPage = () => {
 //   const { testId, bacteria, testData = [] } = useInputData();
 //   const date = new Date();
 //   const location = useLocation();
 //   const { image } = useImageContext();
+//   const savedData = JSON.parse(localStorage.getItem("datePx"));
+//   const navigate = useNavigate();
 
-//   const [newDataPoint, setNewDataPoint] = useState('');
+//   const [newDataPoint, setNewDataPoint] = useState("");
 //   const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
 //   useEffect(() => {
 //     const img = new Image();
@@ -30,84 +31,37 @@
 //   }, [location.state?.newDataPoint]);
 
 //   const day = date.getDate();
-//   const monthName = date.toLocaleString('default', { month: 'long' });
+//   const monthName = date.toLocaleString("default", { month: "long" });
 //   const year = date.getFullYear();
 //   const hours = date.getHours();
-//   const minutes = date.getMinutes().toString().padStart(2, '0');
-//   const seconds = date.getSeconds().toString().padStart(2, '0');
+//   const minutes = date.getMinutes().toString().padStart(2, "0");
+//   const seconds = date.getSeconds().toString().padStart(2, "0");
 //   const time = `${hours}:${minutes}:${seconds}`;
 //   const formattedDateTime = `${year}-${monthName}-${day} ${time}`;
 
-//   const navigate = useNavigate();
 
-//   const token = localStorage.getItem('REACT_TOKEN_AUTH_KEY');
-//   let username = '';
+//   const token = localStorage.getItem("REACT_TOKEN_AUTH_KEY");
+//   let username = "";
 //   if (token) {
 //     try {
 //       const decoded = jwtDecode(token);
 //       username = decoded.sub;
 //     } catch (error) {
-//       console.error('Error decoding token:', error);
+//       console.error("Error decoding token:", error);
 //     }
 //   }
 
-//   // const ApiSendData = async () => {
-//   //   const formattedTestData = testData.map(data => ({
-//   //       antibiotic_name: data[0],   
-//   //       resistant: data[1],   
-//   //       diameter: data[2]
-//   //     }));
-
-//   //   try {
-//   //     const response = await axios.post(
-//   //       'http://localhost:3000/ASTtest/add_data',
-//   //       {
-//   //         testId: testId,    
-//   //         bacteriaName: bacteria, 
-//   //         username,
-//   //         newDataPoint: formattedTestData,
-//   //         createdAt: formattedDateTime
-//   //       },
-//   //       {
-//   //         headers: {
-//   //           'content-type': 'application/json',
-//   //         'Authorization': `Bearer ${JSON.parse(token)}`
-//   //         }
-//   //       }
-//   //     );
-
-//   //     console.log("Sending to /add_data:", JSON.stringify({
-//   //       testId: testId,
-//   //       bacteriaName: bacteria,
-//   //       newDataPoint: testData
-//   //     }, null, 2));
-
-//   //     if (!testData || !Array.isArray(testData) || testData.length === 0) {
-//   //       console.error("Error: testData is empty or invalid", testData);
-//   //       return;
-//   //     }      
-
-//   //     if (response){
-//   //       navigate('/')
-//   //     } else {
-//   //       console.error('fail to send data');
-//   //     }
-//   //   } catch (error) {
-//   //       console.error('Error Add data:', error.message);
-//   //   }
-//   // };
-
 //   function dataURLtoFile(dataurl, filename) {
-//     const arr = dataurl.split(',');
+//     const arr = dataurl.split(",");
 //     if (arr.length !== 2) {
 //       throw new Error("Invalid base64 format");
 //     }
-  
+
 //     const mimeMatch = arr[0].match(/:(.*?);/);
 //     if (!mimeMatch) {
 //       throw new Error("Invalid data URL");
 //     }
-  
+
 //     const mime = mimeMatch[1];
 //     const bstr = atob(arr[1]);
 //     let n = bstr.length;
@@ -117,22 +71,25 @@
 //     }
 //     return new File([u8arr], filename, { type: mime });
 //   }
-  
+
 //   async function blobUrlToFile(blobUrl, filename) {
 //     const res = await fetch(blobUrl);
 //     const blob = await res.blob();
 //     return new File([blob], filename, { type: blob.type });
 //   }
-  
+//   /**
+//    * !  เพิ่ม pixels: savedData[index][1]
+//    * */
 //   const ApiSendData = async () => {
-//     const formattedTestData = testData.map(data => ({
+//     const formattedTestData = testData.map((data, index) => ({
 //       antibiotic_name: data[0],
 //       resistant: data[1],
-//       diameter: data[2]
+//       diameter: data[2],
+//       pixels: savedData[index][1],
 //     }));
-  
+
 //     const filename = `ast_${testId}_${Date.now()}.png`;
-  
+
 //     let fileFromBlob;
 //     try {
 //       fileFromBlob = await blobUrlToFile(image, filename); // ใช้แทน base64
@@ -140,39 +97,42 @@
 //       console.error("Failed to convert blob URL to File:", error.message);
 //       return;
 //     }
-  
+
 //     const formData = new FormData();
-//     formData.append('image', fileFromBlob);
-//     formData.append('data', JSON.stringify({
-//       testId,
-//       bacteriaName: bacteria,
-//       username,
-//       newDataPoint: formattedTestData,
-//       createdAt: formattedDateTime
-//     }));
-  
+//     formData.append("image", fileFromBlob);
+//     formData.append(
+//       "data",
+//       JSON.stringify({
+//         testId,
+//         bacteriaName: bacteria,
+//         username,
+//         newDataPoint: formattedTestData,
+//         createdAt: formattedDateTime,
+//       })
+//     );
+
 //     try {
 //       const response = await axios.post(
-//         'http://localhost:3001/ASTtest/add_data',
+//         "http://localhost:3001/ASTtest/add_data",
 //         formData,
 //         {
 //           headers: {
-//             'Authorization': `Bearer ${JSON.parse(token)}`
-//           }
+//             Authorization: `Bearer ${JSON.parse(token)}`,
+//           },
 //         }
 //       );
-  
+
 //       if (response) {
-//         navigate('/');
+//         navigate("/");
 //       } else {
-//         console.error('fail to send data');
+//         console.error("fail to send data");
 //       }
 //     } catch (error) {
-//       console.error('Error Add data:', error.message);
+//       console.error("Error Add data:", error.message);
 //     }
 //   };
-  
 
+//   console.log("savedData", savedData);
 
 //   return (
 //     <div className="result-container">
@@ -208,10 +168,15 @@
 //               <p className="box-title">Antibiotics and Diameter</p>
 //               {testData && Array.isArray(testData) && testData.length > 0 ? (
 //                 testData.map((data, index) => (
-//                   <div key={index} className="mb-4 md:mb-2 flex flex-col md:flex-row w-4/5 justify-between">
+//                   <div
+//                     key={index}
+//                     className="mb-4 md:mb-2 flex flex-col md:flex-row w-4/5 justify-between"
+//                   >
 //                     <label className="font-bold">{data[0]}</label>
 //                     <label>
-//                       {data[0] !== 'Antimicrobial or Bacteria not found' && <label>{data[1]}</label>}
+//                       {data[0] !== "Antimicrobial or Bacteria not found" && (
+//                         <label>{data[1]}</label>
+//                       )}
 //                       <label>&nbsp;&nbsp;({data[2]}mm)</label>
 //                     </label>
 //                   </div>
@@ -226,122 +191,73 @@
 //         {/* Right Section: Display Image with Circles */}
 //         <div className="right-section">
 //           <div className="image-container">
-//             <img
-//               src={image}
-//               alt="Uploaded Image"
-//               className="result-image"
-//             />
+//             <img src={image} alt="Uploaded Image" className="result-image" />
 //           </div>
 //         </div>
-
 //       </div>
 //       <div className="button-container">
-//         <button className="button" type="button" onClick={() => navigate('/')}>HOME</button>
-//         <button className="button" type="button" onClick={() => ApiSendData()}>SAVE</button>
+//         <button className="button" type="button" onClick={() => navigate("/")}>
+//           HOME
+//         </button>
+//         <button className="button" type="button" onClick={() => ApiSendData()}>
+//           SAVE
+//         </button>
 //       </div>
 //     </div>
 //   );
-
-// }
+// };
 // export default ResultPage;
 
 
 
-import React, { createContext, useState, useEffect, useRef } from "react";
-import { useInputData } from "../components/useInputData";
-import { useNavigate, useLocation } from "react-router-dom";
-import axios from "axios";
-import { jwtDecode } from "jwt-decode";
-import { useImageContext } from "../components/useImageContext";
-import DrawCircle from "../components/draw_circle";
-import "../styles/ResultById.css";
+
+
+import React, { useState, useEffect, useRef } from 'react';
+import { useInputData } from '../components/useInputData';
+import { useNavigate, useLocation } from 'react-router-dom';
+import axios from 'axios';
+import { jwtDecode } from 'jwt-decode';
+import { useImageContext } from '../components/useImageContext';
+import '../styles/ResultById.css';
 
 const ResultPage = () => {
-  const { testId, bacteria, testData = [] } = useInputData();
+  const { testId, bacteria, testData: contextTestData = [] } = useInputData();
   const date = new Date();
   const location = useLocation();
   const { image } = useImageContext();
   const savedData = JSON.parse(localStorage.getItem("datePx"));
+  const navigate = useNavigate();
   const [newDataPoint, setNewDataPoint] = useState("");
+
+  console.log("Location state:", location.state);
+  
+  // Create state to store final data to display
+  const [finalTestData, setFinalTestData] = useState([]);
+  const canvasRef = useRef(null);
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  
+  const day = date.getDate();
+  const monthName = date.toLocaleString('default', { month: 'long' });
+  const year = date.getFullYear();
+  const hours = date.getHours();
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+  const seconds = date.getSeconds().toString().padStart(2, '0');
+  const time = `${hours}:${minutes}:${seconds}`;
+  const formattedDateTime = `${year}-${monthName}-${day} ${time}`;
 
-  const [medLocations, setMedLocations] = useState([]);
-  const [imageLoaded, setImageLoaded] = useState(false);
-  useEffect(() => {
-    // Load medicine locations from localStorage
-    const storedMedLocations = localStorage.getItem("medLocations");
-    if (storedMedLocations) {
-      // try {
-      //   setMedLocations(JSON.parse(storedMedLocations));
-      // } catch (e) {
-      //   console.error("Error parsing medicine locations:", e);
-      // }
-      try {
-        const parsedLocations = JSON.parse(storedMedLocations);
-        console.log("Loaded medicine locations:", parsedLocations);
-        setMedLocations(parsedLocations);
-      } catch (e) {
-        console.error("Error parsing medicine locations:", e);
-      }
+  const token = localStorage.getItem('REACT_TOKEN_AUTH_KEY');
+  let username = '';
+  if (token) {
+    try {
+      const decoded = jwtDecode(token);
+      username = decoded.sub;
+    } catch (error) {
+      console.error('Error decoding token:', error);
     }
-  }, []);
-  // Get scale factor after image loads
-  const [scale, setScale] = useState(1);
-  useEffect(() => {
-    if (imageLoaded) {
-      const imgElement = document.querySelector('.result-image');
-      if (imgElement && imageSize.width) {
-        const scaleX = imgElement.offsetWidth / imageSize.width;
-        console.log("Image scale factor:", scaleX);
-        setScale(scaleX);
-      }
-    }
-  }, [imageLoaded, imageSize]);
-  // Add this function to get short antibiotic names
-  const getShortName = (fullName) => {
-    // Extract code before colon (e.g., "AMC" from "AMC: Amoxicillin-clavulanate")
-    const match = fullName?.match(/^([^:]+):/);
-    return match ? match[1] : fullName?.substring(0, 3) || "";
-  };
+  }
 
-  // Fetch medicine locations when the component mounts
-  // useEffect(() => {
-  //   const fetchMedicineLocations = async () => {
-  //     try {
-  //       const response = await axios.get(
-  //         `http://localhost:3001/ASTtest/medicine-locations/${testId}`,
-  //         {
-  //           headers: {
-  //             Authorization: `Bearer ${JSON.parse(token)}`,
-  //           },
-  //         }
-  //       );
-  //       if (response.data && response.data.med_loc) {
-  //         // Convert flat array to array of x,y coordinates
-  //         const locArray = response.data.med_loc;
-  //         const parsedLoc = [];
-          
-  //         for (let i = 0; i < locArray.length; i += 2) {
-  //           parsedLoc.push({ x: locArray[i], y: locArray[i + 1] });
-  //         }
-  //         setMedicineLoc(parsedLoc);
-  //       }
-  //     } catch (error) {
-  //       console.error("Error fetching medicine locations:", error);
-  //     }
-  //   };
-  //   fetchMedicineLocations();
-  // }, [testId]);
-
-
-  useEffect(() => {
-    const img = new Image();
-    img.src = image;
-    img.onload = () => {
-      setImageSize({ width: img.width, height: img.height });
-      setImageLoaded(true); // add
-    };
-  }, [image]);
 
   useEffect(() => {
     if (location.state?.newDataPoint) {
@@ -349,110 +265,384 @@ const ResultPage = () => {
     }
   }, [location.state?.newDataPoint]);
 
-  const day = date.getDate();
-  const monthName = date.toLocaleString("default", { month: "long" });
-  const year = date.getFullYear();
-  const hours = date.getHours();
-  const minutes = date.getMinutes().toString().padStart(2, "0");
-  const seconds = date.getSeconds().toString().padStart(2, "0");
-  const time = `${hours}:${minutes}:${seconds}`;
-  const formattedDateTime = `${year}-${monthName}-${day} ${time}`;
-
-  const navigate = useNavigate();
-
-  const token = localStorage.getItem("REACT_TOKEN_AUTH_KEY");
-  let username = "";
-  if (token) {
-    try {
-      const decoded = jwtDecode(token);
-      username = decoded.sub;
-    } catch (error) {
-      console.error("Error decoding token:", error);
+  // Set finalTestData when component loads
+  useEffect(() => {
+    console.log("Location state raw:", location.state);
+    
+    if (location.state?.testData) {
+      console.log("TestData structure:", 
+        location.state.testData.map((item, i) => ({
+          index: i,
+          type: Array.isArray(item) ? "Array" : typeof item,
+          length: Array.isArray(item) ? item.length : 'N/A',
+          value: item
+        }))
+      );
     }
-  }
+    
+    if (location.state?.testData && Array.isArray(location.state.testData) && location.state.testData.length > 0) {
+      console.log("Using data from location.state:", location.state.testData);
+      
+      const processedData = location.state.testData.map(item => {
+        if (Array.isArray(item)) {
+          return [
+            item[0] || 'Unknown',                   // antibiotic name
+            item[1] || 'Unknown',                   // Sir
+            parseFloat(item[2] || 0).toFixed(2),    // diameter
+            parseFloat(item[3] || 0),               // x_position
+            parseFloat(item[4] || 0)                // y_position
+          ];
+        } else if (typeof item === 'object') {
+          return [
+            item.antibiotic_name || 'Unknown',
+            item.resistant || 'Unknown',
+            parseFloat(item.diameter || 0).toFixed(2),
+            parseFloat(item.x_position || 0), 
+            parseFloat(item.y_position || 0)
+          ];
+        }
+        return ['Unknown', 'Unknown', '0.00', 0, 0];
+      });
+      
+      console.log("Processed data for display:", processedData);
+      setFinalTestData(processedData);
+    } 
+    // If not available, use data from context
+    else if (contextTestData && Array.isArray(contextTestData) && contextTestData.length > 0) {
+      console.log("Using data from context:", contextTestData);
+      setFinalTestData(contextTestData);
+    } else {
+      console.warn("No test data available");
+    }
+  }, [location.state, contextTestData]);
 
-  function dataURLtoFile(dataurl, filename) {
-    const arr = dataurl.split(",");
-    if (arr.length !== 2) {
-      throw new Error("Invalid base64 format");
+  // Load image and data
+  useEffect(() => {
+    if (!image) {
+      console.warn("No image available");
+      return;
     }
 
-    const mimeMatch = arr[0].match(/:(.*?);/);
-    if (!mimeMatch) {
-      throw new Error("Invalid data URL");
+    const img = new Image();
+    img.src = image;
+    
+    img.onload = () => {
+      setImageSize({ width: img.width, height: img.height });
+      
+      // Use data from finalTestData
+      if (finalTestData && finalTestData.length > 0) {
+        console.log("Drawing labels with data:", finalTestData);
+        drawImageWithLabels(img);
+      } else {
+        console.warn("Cannot draw labels: No test data available");
+      }
+    };
+  }, [image, finalTestData]);
+
+  const drawImageWithLabels = (img) => {
+    const canvas = canvasRef.current;
+    if (!canvas) {
+      console.error("Canvas element not available");
+      return;
     }
 
-    const mime = mimeMatch[1];
-    const bstr = atob(arr[1]);
-    let n = bstr.length;
-    const u8arr = new Uint8Array(n);
-    while (n--) {
-      u8arr[n] = bstr.charCodeAt(n);
+    const ctx = canvas.getContext('2d');
+    // Set canvas size to match image
+    canvas.width = img.width || 500;
+    canvas.height = img.height || 500;
+    
+    // Draw background image
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    
+    // Use finalTestData
+    if (finalTestData && Array.isArray(finalTestData) && finalTestData.length > 0) {
+      console.log("Drawing with data points:", finalTestData.length);
+      
+      // Calculate optimal positions for items without coordinates
+      const labelPositions = calculateOptimalPositions(
+        canvas.width, 
+        canvas.height, 
+        finalTestData.length
+      );
+      
+      finalTestData.forEach((data, index) => {
+        console.log(`Drawing label ${index}:`, data);
+        
+        let diameter, antibioticName, resistant, x, y;
+        
+        if (Array.isArray(data)) {
+          antibioticName = data[0] || 'Unknown';
+          resistant = data[1] || '';
+          diameter = parseFloat(data[2]) || 0;
+          
+          if (data.length >= 5) {
+            x = parseFloat(data[3]);
+            y = parseFloat(data[4]);
+            console.log(`Using coordinates from array: (${x}, ${y})`);
+          } else {
+            console.log(`No coordinates in array for item ${index}`);
+            x = undefined;
+            y = undefined;
+          }
+        } else if (typeof data === 'object') {
+          antibioticName = data.antibiotic_name || 'Unknown';
+          resistant = data.resistant || '';
+          diameter = parseFloat(data.diameter) || 0;
+          x = parseFloat(data.x_position);
+          y = parseFloat(data.y_position);
+          console.log(`Using coordinates from object: (${x}, ${y})`);
+        } else {
+          console.error(`Invalid data format for item ${index}:`, data);
+          return;
+        }
+        
+        if (x === undefined || y === undefined || isNaN(x) || isNaN(y) || (x === 0 && y === 0)) {
+          console.log(`Using fallback position for item ${index}`);
+          const position = labelPositions[index] || { x: canvas.width / 2, y: canvas.height / 2 };
+          x = position.x;
+          y = position.y;
+        }
+        
+        console.log(`Final drawing position: x=${x}, y=${y}`);
+        
+        // Position for antibiotic name text
+        const textX = x;
+        const textY = y - 30;
+        
+        let shortName = antibioticName;
+        const match = antibioticName.match(/^([A-Za-z0-9\/]+):/);
+        if (match && match[1]) {
+            shortName = match[1];
+        } else if (antibioticName.length > 8) {
+            shortName = antibioticName.substring(0, 8) + '...';
+        }
+        
+        // text background
+        ctx.font = "bold 55px Arial Black";
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        
+        const textWidth = ctx.measureText(shortName).width;
+        const textHeight = 60;
+        
+        // Add shadow
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
+        ctx.shadowBlur = 10;
+        ctx.shadowOffsetX = 3;
+        ctx.shadowOffsetY = 3;
+        
+        // Draw text box with border
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+        ctx.fillRect(textX - textWidth / 2 - 20, textY - textHeight / 2 - 10, textWidth + 40, textHeight + 20);
+        
+        // Clear shadow before drawing border
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+        
+        ctx.lineWidth = 6;
+        ctx.strokeStyle = 'red';
+        ctx.strokeRect(textX - textWidth / 2 - 20, textY - textHeight / 2 - 10, textWidth + 40, textHeight + 20);
+        
+        // Add shadow for text
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
+        ctx.shadowBlur = 5;
+        ctx.shadowOffsetX = 2;
+        ctx.shadowOffsetY = 2;
+        
+        // Draw text
+        ctx.fillStyle = 'red';
+        ctx.fillText(shortName, textX, textY);
+        
+        // Clear shadow before drawing diameter
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+        
+        // Show diameter value
+        ctx.font = "bold 40px Arial";
+        const diameterText = `${diameter} mm`;
+        
+        // Calculate position for diameter
+        const diamTextY = y + 60;
+        
+        // Draw text box for diameter
+        const diamTextWidth = ctx.measureText(diameterText).width;
+        
+        // Add shadow for box
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
+        ctx.shadowBlur = 10;
+        ctx.shadowOffsetX = 3;
+        ctx.shadowOffsetY = 3;
+        
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+        ctx.fillRect(x - diamTextWidth / 2 - 15, diamTextY - 25, diamTextWidth + 30, 50);
+        
+        // Clear shadow before drawing border
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+        
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = 'black';
+        ctx.strokeRect(x - diamTextWidth / 2 - 15, diamTextY - 25, diamTextWidth + 30, 50);
+        
+        // Add shadow for text
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
+        ctx.shadowBlur = 5;
+        ctx.shadowOffsetX = 2;
+        ctx.shadowOffsetY = 2;
+        
+        ctx.fillStyle = 'black';
+        ctx.fillText(diameterText, x, diamTextY);
+        
+        // Clear shadow when done
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+      });
+    } else {
+      console.warn("No test data available for drawing");
     }
-    return new File([u8arr], filename, { type: mime });
-  }
+  };
 
+  const calculateOptimalPositions = (width, height, count) => {
+    const positions = [];
+    const centerX = width / 2;
+    const centerY = height / 2;
+    const radius = Math.min(width, height) * 0.35;
+    
+    if (count <= 1) {
+      positions.push({ x: centerX, y: centerY });
+    } else if (count === 2) {
+      positions.push({ x: centerX - radius / 2, y: centerY });
+      positions.push({ x: centerX + radius / 2, y: centerY });
+    } else {
+      for (let i = 0; i < count; i++) {
+        const angle = (i / count) * 2 * Math.PI;
+        const x = centerX + radius * Math.cos(angle);
+        const y = centerY + radius * Math.sin(angle);
+        positions.push({ x, y });
+      }
+    }
+    
+    return positions;
+  };
+
+  // Convert blob URL to file
   async function blobUrlToFile(blobUrl, filename) {
     const res = await fetch(blobUrl);
     const blob = await res.blob();
     return new File([blob], filename, { type: blob.type });
   }
+  
   /**
    * !  เพิ่ม pixels: savedData[index][1]
    * */
   const ApiSendData = async () => {
-    const formattedTestData = testData.map((data, index) => ({
-      antibiotic_name: data[0],
-      resistant: data[1],
-      diameter: data[2],
-      pixels: savedData[index][1],
-    }));
-
-    const filename = `ast_${testId}_${Date.now()}.png`;
-
-    let fileFromBlob;
+    setIsLoading(true);
+    setError('');
+    
     try {
-      fileFromBlob = await blobUrlToFile(image, filename); // ใช้แทน base64
-    } catch (error) {
-      console.error("Failed to convert blob URL to File:", error.message);
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append("image", fileFromBlob);
-    formData.append(
-      "data",
-      JSON.stringify({
+      if (!testId) {
+        setError('Missing test ID');
+        setIsLoading(false);
+        return;
+      }
+      
+      if (!bacteria) {
+        setError('Missing bacteria information');
+        setIsLoading(false);
+        return;
+      }
+      
+      if (!finalTestData || !Array.isArray(finalTestData) || finalTestData.length === 0) {
+        setError('No test data available');
+        setIsLoading(false);
+        return;
+      }
+      
+      const formattedTestData = finalTestData.map((data, index) => {
+        if (Array.isArray(data)) {
+          return {
+            antibiotic_name: data[0] || '',    // antibiotic name 
+            resistant: data[1] || '',          // Sir
+            diameter: parseFloat(data[2]) || 0, // diameter 
+            x_position: data[3] || 0,           // x position
+            y_position: data[4] || 0,           // y position
+            pixels: savedData[index][1]
+          };
+        } else {
+          return {
+            antibiotic_name: data.antibiotic_name || '', 
+            resistant: data.resistant || '',         
+            diameter: parseFloat(data.diameter) || 0,   
+            x_position: data.x_position || 0,        
+            y_position: data.y_position || 0,          
+            pixels: savedData[index][1]
+          };
+        }
+      });
+      
+    
+      const filename = `test_${testId}_${Date.now()}.png`;
+    
+      let fileFromBlob;
+      try {
+        // Use image from canvas with labels
+        if (canvasRef.current) {
+          const canvasDataUrl = canvasRef.current.toDataURL('image/png');
+          const canvasBlob = await (await fetch(canvasDataUrl)).blob();
+          fileFromBlob = new File([canvasBlob], filename, { type: 'image/png' });
+        } else {
+          // Use original image if canvas not available
+          fileFromBlob = await blobUrlToFile(image, filename);
+        }
+      } catch (error) {
+        console.error("Failed to convert image to File:", error.message);
+        setError("Failed to process image");
+        setIsLoading(false);
+        return;
+      }
+    
+      const formData = new FormData();
+      formData.append('image', fileFromBlob);
+      formData.append('data', JSON.stringify({
         testId,
         bacteriaName: bacteria,
         username,
         newDataPoint: formattedTestData,
-        createdAt: formattedDateTime,
-      })
-    );
-
-    try {
+        createdAt: formattedDateTime
+      }));
+    
+      console.log('Sending data:', formattedTestData);
+    
       const response = await axios.post(
-        "http://localhost:3001/ASTtest/add_data",
+        'http://localhost:3001/ASTtest/add_data',
         formData,
         {
           headers: {
-            Authorization: `Bearer ${JSON.parse(token)}`,
-          },
+            'Authorization': `Bearer ${JSON.parse(token)}`
+          }
         }
       );
-
-      if (response) {
-        navigate("/");
+    
+      if (response && response.status === 200) {
+        navigate('/');
       } else {
-        console.error("fail to send data");
+        setError('Failed to save data');
       }
     } catch (error) {
-      console.error("Error Add data:", error.message);
+      console.error('Error Add data:', error.message);
+      setError(error.response?.data?.error || 'An error occurred while saving data');
+    } finally {
+      setIsLoading(false);
     }
   };
-
-  console.log("savedData", savedData);
 
   return (
     <div className="result-container">
@@ -484,113 +674,82 @@ const ResultPage = () => {
           </div>
 
           <div className="box">
+
             <div className="box-content">
               <p className="box-title">Antibiotics and Diameter</p>
-              {testData && Array.isArray(testData) && testData.length > 0 ? (
-                testData.map((data, index) => (
-                  <div
-                    key={index}
-                    className="mb-4 md:mb-2 flex flex-col md:flex-row w-4/5 justify-between"
-                  >
-                    <label className="font-bold">{data[0]}</label>
-                    <label>
-                      {data[0] !== "Antimicrobial or Bacteria not found" && (
-                        <label>{data[1]}</label>
+              {finalTestData && Array.isArray(finalTestData) && finalTestData.length > 0 ? (
+                finalTestData.map((data, index) => {
+                  // Handle both array and object formats
+                  let antibioticName, resistant, diameter;
+                  
+                  if (Array.isArray(data)) {
+                    antibioticName = data[0] || 'Unknown';
+                    resistant = data[1] || '';
+                    diameter = data[2] || 0;
+                  } else {
+                    antibioticName = data.antibiotic_name || 'Unknown';
+                    resistant = data.resistant || '';
+                    diameter = data.diameter || 0;
+                  }
+                  return (
+                    // <div key={index} className="mb-4 md:mb-2 flex flex-col md:flex-row w-4/5 justify-between">
+                    //   <label className="font-bold">{antibioticName}</label>
+                    //   <label>
+                    //     {antibioticName !== 'Antimicrobial or Bacteria not found' && <label>{resistant}</label>}
+                    //     <label>&nbsp;&nbsp;({diameter} mm)</label>
+                    //   </label>
+                    // </div>
+                    <div key={index} className="antibiotic-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                      <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <label>{`${antibioticName} : `}</label>
+                        <label>&nbsp;&nbsp;{diameter} mm</label>
+                      </div>
+                      {/* {data.resistant && ( <label>{`Interpretation ${data.resistant}`}</label>)} */}
+                      {resistant && resistant.trim() !== '' && (
+                        <label>{`Interpretation ${resistant}`}</label>
                       )}
-                      <label>&nbsp;&nbsp;({data[2]}mm)</label>
-                    </label>
-                  </div>
-                ))
+                    </div>
+                  );
+                })
               ) : (
                 <p>No test data available</p>
               )}
             </div>
+
           </div>
         </div>
 
-        {/* Right Section: Display Image with Circles */}
+        {/* Right Section: Display Image with Labels */}
         <div className="right-section">
           <div className="image-container">
-            <img src={image} alt="Uploaded Image" className="result-image" onLoad={() => setImageLoaded(true)}/>
-            {/* Medicine Labels */}
-            {/* {imageLoaded && medLocations && medLocations.length > 0 && testData && testData.length > 0 && 
-              medLocations.map((loc, index) => {
-                if (index < testData.length) {
-                  const [x, y] = loc;
-                  const antibioticName = testData[index][0];
-                  return (
-                    <div 
-                      key={index}
-                      className="medicine-label"
-                      style={{
-                        position: 'absolute',
-                        left: `${x * scale}px`,
-                        top: `${y * scale}px`,
-                        transform: 'translate(-50%, -50%)',
-                        backgroundColor: 'rgba(255, 255, 255, 0.7)',
-                        padding: '2px 5px',
-                        borderRadius: '3px',
-                        fontSize: '12px',
-                        fontWeight: 'bold',
-                        border: '1px solid #333',
-                        zIndex: 10
-                      }}
-                    >
-                      {getShortName(antibioticName)}
-                    </div>
-                  );
-                }
-                return null;
-              })
-            } */}
-            {imageLoaded && medLocations && medLocations.length > 0 && testData && testData.length > 0 && 
-            medLocations.map((loc, index) => {
-              if (index < testData.length) {
-                const [x, y] = loc;
-                const antibioticData = testData[index];
-                // Get antibiotic name from testData - assuming it's the first element
-                const antibioticName = antibioticData[0];
-                return (
-                  <div 
-                    key={index}
-                    className="medicine-label"
-                    style={{
-                      position: 'absolute',
-                      left: `${x * scale}px`,
-                      top: `${y * scale}px`,
-                      transform: 'translate(-50%, -50%)',
-                      backgroundColor: 'rgba(255, 255, 255, 0.8)',
-                      padding: '3px 6px',
-                      borderRadius: '4px',
-                      fontSize: '12px',
-                      fontWeight: 'bold',
-                      border: '1px solid #333',
-                      zIndex: 10
-                    }}
-                  >
-                    {getShortName(antibioticName)}
-                  </div>
-                );
-              }
-              return null;
-            })
-          }
-
-
-
-
+            <canvas
+              ref={canvasRef}
+              className="result-image extra-large"
+              style={{ maxWidth: '100%', height: 'auto' }}
+            />
           </div>
         </div>
       </div>
+      
       <div className="button-container">
-        <button className="button" type="button" onClick={() => navigate("/")}>
+        <button 
+          className="button" 
+          type="button" 
+          onClick={() => navigate('/')}
+          disabled={isLoading}
+        >
           HOME
         </button>
-        <button className="button" type="button" onClick={() => ApiSendData()}>
-          SAVE
+        <button 
+          className="button" 
+          type="button" 
+          onClick={() => ApiSendData()}
+          disabled={isLoading}
+        >
+          {isLoading ? 'SAVING...' : 'SAVE'}
         </button>
       </div>
     </div>
   );
 };
-export default ResultPage;
+export default ResultPage; 

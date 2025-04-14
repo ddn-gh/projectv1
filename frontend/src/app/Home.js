@@ -162,7 +162,7 @@ const LoggedOutHome = () => {
 
   const [test, setTest] = useState([]);
   useEffect(() => {
-    fetch("http://localhost:3000/ASTtest/get_test_data")
+    fetch("http://localhost:3001/ASTtest/get_test_data")
       .then((res) => res.json())
       .then((data) => {
         console.log(data);
