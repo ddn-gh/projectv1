@@ -165,6 +165,9 @@ const ResultById = () => {
   const { image } = useImageContext();
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
 
+  const [historyData, setHistoryData] = useState([]);
+
+
   useEffect(() => {
     if (location.state?.newDataPoint) {
       setNewDataPoint(location.state.newDataPoint);
@@ -180,6 +183,7 @@ const ResultById = () => {
       if (responseData) {
         setTestInfo(responseData.test_data);
         setTestResult(responseData.inhibition_zones);
+        setHistoryData(responseData.inhibition_zone_history); // add edit date
       } else {
         console.error("No data received from API");
       }
@@ -207,6 +211,15 @@ const ResultById = () => {
     return `${day} - ${monthName} - ${year} ${hours}:${minutes}:${seconds}`;
   };
 
+  const latestEditDate = historyData?.length
+  ? formatDate(
+      historyData
+        .map((item) => new Date(item.edit_at))
+        .sort((a, b) => b - a)[0]
+    )
+  : "N/A";
+
+
   return (
     <div className="result-container">
       <div className="header-section">
@@ -225,7 +238,8 @@ const ResultById = () => {
                   </div>
                   <div className="info-item">
                     <label className="font-bold">Edit at :&nbsp;</label>
-                    <label>{formatDate(test.created_at)}</label>
+                    {/* <label>{formatDate(test.created_at)}</label> */}
+                    <label>{latestEditDate}</label>
                   </div>
                   <div className="info-item">
                     <label className="font-bold">Bacteria :&nbsp;</label>

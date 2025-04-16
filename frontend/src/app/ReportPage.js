@@ -29,7 +29,7 @@ const ReportPage = () => {
     "TZP: Piperacillin-tazobactam", "VAN: Vancomycin"];
 
   const fetchLatestData = () => {
-    fetch('/ASTtest/report/latest')
+    fetch('http://localhost:3001/ASTtest/report/latest')
       .then((response) => response.json())
       .then((data) => {
         setReportData(data);
@@ -58,6 +58,18 @@ const ReportPage = () => {
   useEffect(() => {
     fetchLatestData(); 
   }, []);
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    const day = date.getDate();
+    const month = date.toLocaleString("default", { month: "long" });
+    const year = date.getFullYear();
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    return `${day} ${month} ${year} ${hours}:${minutes}`;
+  };
+  
 
   return (
     <div className="report-page">
@@ -129,7 +141,10 @@ const ReportPage = () => {
                     <td>{row.test_id}</td>
                     <td>{row.bacteria_name}</td>
                     <td>{zone.username}</td>
-                    <td>{row.created_at}</td>
+
+                    {/* <td>{row.created_at}</td> */}
+                    <td>{formatDate(zone.performed_at)}</td>
+
                     <td>{zone.antibiotic_name}</td>
                     <td>{zone.diameter}</td>
                     <td>{zone.resistant}</td>

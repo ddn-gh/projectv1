@@ -275,7 +275,7 @@ const AddDataName = ({ onShowNumberInput, currentInde, dataLength }) => {
   const [antibioticname, setName] = useState("");
   const { image } = useImageContext();
   const [images, setImages] = useState("");
-  const { bacteria, username, newDataPoint, setNewDataPoint, setTestData } = useInputData();
+  const { testId, bacteria, username, newDataPoint, setNewDataPoint, setTestData } = useInputData();
   const token = localStorage.getItem("REACT_TOKEN_AUTH_KEY");
   const navigate = useNavigate();
   const [error, setError] = useState("");
@@ -305,7 +305,7 @@ const AddDataName = ({ onShowNumberInput, currentInde, dataLength }) => {
       "TVA: Trovafloxacin", "TZD: Tedizolid", "TZP: Piperacillin-tazobactam", "VAN: Vancomycin"
     ];
 
-    const testId = localStorage.getItem("testId");
+    //const testId = localStorage.getItem("testId");
 
   const fetchAntibioticHistory = async () => {
     if (!testId || !token) return;
@@ -514,6 +514,10 @@ const AddDataName = ({ onShowNumberInput, currentInde, dataLength }) => {
     if (edit_status == "true") {
       if (validateAntibioticName() == false) {
         alert("Please input previous Antibiotic name");
+        console.log("Previous antibiotics:", previousAntibioticsOld);
+        console.log("Current inputValue:", inputValue);
+        console.log("Fetching antibiotics for testId:", testId);
+
         return;
       }
     }
