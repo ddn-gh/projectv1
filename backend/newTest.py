@@ -1,5 +1,5 @@
 import base64
-from datetime import datetime
+from datetime import datetime, timezone
 from io import BytesIO
 import os
 import random
@@ -27,6 +27,7 @@ from scipy.ndimage import median_filter
 from scipy.signal import find_peaks
 import time
 from sqlalchemy import and_, desc
+import pytz
 
 UPLOAD_FOLDER = "uploads"
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg"}
@@ -577,104 +578,6 @@ def get_latest_edit_number(test_id):
 
     return latest_edit if latest_edit is not None else 0
 
-
-# import json
-# @newtest_ns.route("/add_data")
-# class AddData(Resource):
-#     @jwt_required()
-#     def post(self):
-#         try:
-#             # เช็คภาพ
-#             if "image" not in request.files:
-#                 return {"error": "Image file missing"}, 400
-
-#             image = request.files["image"]
-#             if not image or not allowed_file(image.filename):
-#                 return {"error": "Invalid image file"}, 400
-
-#             # รับข้อมูล JSON จาก form field ชื่อ 'data'
-#             data_json = request.form.get("data")
-#             if not data_json:
-#                 return {"error": "Missing data"}, 400
-
-#             new_data = json.loads(data_json)
-#             test_id = new_data["testId"]
-#             bacteria_name = new_data["bacteriaName"]
-#             username = new_data["username"]
-#             new_data_points = new_data.get("newDataPoint")
-#             created_at = new_data.get("createdAt")
-
-#             # ตั้งชื่อไฟล์รูปภาพ
-#             timestamp = int(time.time())
-#             ext = image.filename.rsplit(".", 1)[1].lower()
-#             filename = secure_filename(f"{test_id}_{timestamp}.{ext}")
-#             filepath = os.path.join(UPLOAD_FOLDER, filename)
-#             image.save(filepath)
-
-#             # เตรียมการเขียนข้อมูล
-#             output_inhibition = []
-#             output_history = []
-
-#             existing_test = ASTtest.query.filter_by(test_id=test_id).first()
-#             if existing_test:
-#                 existing_test.update(bacteria_name, username)
-#                 existing_test.image_filename = filename
-#                 number_of_edit = get_latest_edit_number(test_id)
-#                 InhibitionZone.query.filter_by(test_id=test_id).delete()
-#             else:
-#                 existing_test = ASTtest(
-#                     test_id=test_id,
-#                     bacteria_name=bacteria_name,
-#                     username=username,
-#                     created_at=created_at,
-#                     image_filename=filename,
-#                 )
-#                 db.session.add(existing_test)
-#                 number_of_edit = 0
-
-#             for newData in new_data_points:
-#                 antibiotic_name = newData["antibiotic_name"]
-#                 inhibition_diam = newData["diameter"]
-#                 inhibition_pixels = newData["pixels"]
-#                 resistant = newData["resistant"]
-
-#                 inhibition_zone = InhibitionZone(
-#                     test_id=test_id,
-#                     antibiotic_name=antibiotic_name,
-#                     diameter=inhibition_diam,
-#                     pixel=inhibition_pixels,
-#                     resistant=resistant,
-#                     username=username,
-#                     created_at=datetime.utcnow(),
-#                 )
-#                 db.session.add(inhibition_zone)
-
-#                 history_entry = InhibitionZoneHistory(
-#                     test_id=test_id,
-#                     number_of_test=number_of_edit + 1,
-#                     antibiotic_name=antibiotic_name,
-#                     diameter=inhibition_diam,
-#                     resistant=resistant,
-#                     username=username,
-#                     edit_at=datetime.utcnow(),
-#                 )
-#                 db.session.add(history_entry)
-
-#                 output_inhibition.append(inhibition_zone)
-#                 output_history.append(history_entry)
-
-#             db.session.commit()
-
-#             return {
-#                 "message": "Data and image saved successfully",
-#                 "image_filename": filename,
-#                 "history_count": len(output_history),
-#                 "zone_count": len(output_inhibition),
-#             }, 201
-
-#         except Exception as e:
-#             print("Error:", e)
-#             return {"error": str(e)}, 500
 import json
 @newtest_ns.route('/add_data')
 class AddData(Resource):
@@ -703,9 +606,17 @@ class AddData(Resource):
             
             # แปลงรูปแบบวันที่เวลา
             try:
-                created_at = datetime.strptime(created_at_str, "%Y-%B-%d %H:%M:%S")
+                # created_at = datetime.strptime(created_at_str, "%Y-%B-%d %H:%M:%S")
+                created_at = datetime.strptime(created_at_str, "%Y-%m-%d %H:%M:%S")
+                bk_tz = pytz.timezone("Asia/Bangkok")
+                created_at = bk_tz.localize(created_at) 
+                created_at = created_at.astimezone(pytz.utc)
             except (ValueError, TypeError):
-                created_at = datetime.utcnow()
+                # created_at = datetime.strptime(created_at_str, "%Y-%B-%d %H:%M:%S")
+                created_at = datetime.strptime(created_at_str, "%Y-%m-%d %H:%M:%S")
+                bk_tz = pytz.timezone("Asia/Bangkok")
+                created_at = bk_tz.localize(created_at) 
+                created_at = created_at.astimezone(pytz.utc)
             
             if not all([test_id, bacteria_name, username, new_data_points]):
                 missing = []
@@ -793,7 +704,8 @@ class AddData(Resource):
                     diameter=float(inhibition_diam),
                     resistant=resistant or "",
                     username=username,
-                    edit_at=datetime.utcnow()
+                    # edit_at=datetime.utcnow()
+                    edit_at = created_at
                 )
                 db.session.add(history_entry)
 

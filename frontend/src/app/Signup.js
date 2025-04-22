@@ -1,12 +1,13 @@
 import React, { useState } from 'react'
 import { Form, Button, Alert } from 'react-bootstrap'
-import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import "../styles/SignUp.css"
 import axios from 'axios';
 
 const SignUpPage = () => {
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
+  const navigate = useNavigate();
 
   const submitForm = (data) => {
     if (data.password === data.confirmPassword) {
@@ -19,12 +20,16 @@ const SignUpPage = () => {
       axios.post('http://localhost:3001/auth/signup', body)
         .then(response => {
           console.log(response.data);
+          
         })
         .catch(error => {
           console.error(error);
         });
 
-      // reset();
+      reset();
+      setTimeout(() => {
+        navigate('/login');
+      }, 2000);
     } else {
       alert("password not match");
     }

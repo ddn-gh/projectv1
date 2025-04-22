@@ -1,5 +1,11 @@
+import pytz
 from exts import db
 from datetime import datetime, timedelta
+
+def convert_time():
+    bangkok_tz = pytz.timezone('Asia/Bangkok')
+    timez = datetime.now(bangkok_tz)
+    return timez
 
 class ASTtest(db.Model):
     __tablename__ = 'asttest'
@@ -7,7 +13,8 @@ class ASTtest(db.Model):
     test_id = db.Column(db.Integer(), primary_key=True)
     bacteria_name = db.Column(db.String(), nullable=False)
     username = db.Column(db.String(), db.ForeignKey('user.username'), nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=True)
+    # created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=True)
+    created_at = db.Column(db.DateTime, default=convert_time, nullable=True)
     
     image_filename = db.Column(db.String(), nullable=True)
     
@@ -91,7 +98,8 @@ class InhibitionZone(db.Model):
     
     resistant = db.Column(db.String(), nullable=True)
     username = db.Column(db.String(), db.ForeignKey('user.username'), nullable=True)
-    created_at = db.Column(db.DateTime, nullable=True)
+    # created_at = db.Column(db.DateTime, nullable=True)
+    created_at = db.Column(db.DateTime, default=convert_time, nullable=True)
     
     test = db.relationship('ASTtest', back_populates='inhibition_zones')
     user = db.relationship('User', back_populates='inhibition_zones') 
@@ -126,7 +134,8 @@ class InhibitionZoneHistory(db.Model):
     diameter = db.Column(db.Float(), nullable=True)
     resistant = db.Column(db.String(), nullable=True)
     username = db.Column(db.String(), db.ForeignKey('user.username'), nullable=True)
-    edit_at = db.Column(db.DateTime, nullable=True)
+    # edit_at = db.Column(db.DateTime, nullable=True)
+    edit_at = db.Column(db.DateTime, default=convert_time, nullable=True)
 
     user = db.relationship('User', back_populates='zone_history')
     test = db.relationship('ASTtest', back_populates='inhibition_zone_history')
