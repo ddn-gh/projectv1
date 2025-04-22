@@ -11,6 +11,7 @@ flask-jwt-extended = "*"
 flask-migrate = "*"
 flask-cors = "*"
 python-decouple = "*"
+gunicorn = "*"
 
 [dev-packages]
 

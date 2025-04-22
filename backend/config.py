@@ -8,15 +8,9 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = config('SQLALCHEMY_TRACK_MODIFICATIONS', cast=bool)
     
 class DevConfig(Config):
-    SQLALCHEMY_DATABASE_URI = config('DATABASE_URL', default='postgresql://postgres:6116@localhost:5432/ast-test')
+    # SQLALCHEMY_DATABASE_URI = config('DATABASE_URL', default='postgresql://postgres:6116@localhost:5432/ast-test')
+    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL")
     DEBUG = True
     SQLALCHEMY_ECHO = True
-    
-class ProdConfig(Config):
-    pass
-    
-class TestConfig(Config):
-    SQLALCHEMY_DATABASE_URI = config('DATABASE_URL', default='postgresql://postgres:6116@localhost:5432/ast-test')
-    SQLALCHEMY_ECHO = False
-    TESTING = True
+
 

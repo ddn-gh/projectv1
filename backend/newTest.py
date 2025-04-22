@@ -1,5 +1,6 @@
 import base64
 from datetime import datetime, timezone
+from decimal import ROUND_HALF_UP, Decimal
 from io import BytesIO
 import os
 import random
@@ -28,6 +29,7 @@ from scipy.signal import find_peaks
 import time
 from sqlalchemy import and_, desc
 import pytz
+from scipy.ndimage import gaussian_filter1d
 
 UPLOAD_FOLDER = "uploads"
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg"}
@@ -74,7 +76,6 @@ class PelletsDetector:
                 
                 raw_radius = [self.med_circles[0, i, -1] for i in range(self.med_circles.shape[1])]
                 median_radius = int(np.median(raw_radius))
-                print(f"[INFO] Normalized all med_rad to median radius: {median_radius}")
                 self.med_rad = [median_radius for _ in raw_radius]
                 
                 reference_scale_set = False
@@ -134,135 +135,164 @@ class PelletsDetector:
 
         return np.array(intencities)
 
-    def calculate_trimmed_mean(inten, proportion=0.2):
+    def calculate_trimmed_mean(inten, proportion=0.1):
         """calculate trimmed mean of each ranged"""
         return trim_mean(inten, proportion)
+    
+    def smooth_1d_profile_adaptive_brightness(profile, window_size=10, sensitivity=0.7, white_floor=150, gray_flat_range=30):
+        smoothed = profile.copy()
+        length = len(smoothed)
+        for i in range(1, length):
+            prev_val = smoothed[i - 1]
+            curr_val = smoothed[i]
+
+            start = max(0, i - window_size)
+            end = min(length, i + window_size + 1)
+            local_window = np.array(smoothed[start:end])
+            local_brightness = np.mean(local_window)
+            local_contrast = np.std(local_window)
+
+            brightness_factor = np.exp(-local_brightness / 255)
+            contrast_factor = np.clip(local_contrast / 128, 0.1, 1.0)
+            adaptive_threshold = sensitivity * (1.0 + contrast_factor) * brightness_factor * 20
+            
+            if abs(curr_val - prev_val) < adaptive_threshold:
+                smoothed[i] = prev_val
+            if curr_val > white_floor and curr_val > prev_val:
+                smoothed[i] = prev_val
+            if np.max(local_window) - np.min(local_window) <= gray_flat_range:
+                smoothed[i] = int(np.mean(local_window))
+        return smoothed
 
     def predict_diameter(self):
-        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(3, 3))
-        kernel2 = np.ones((6, 6), np.uint8)
-        img_polar = []
-        global closing_list
-        closing_list = []
         inhibition_zone_pixels = []
         inhibition_zone_diam = []
+        global closing_list
+        closing_list = []
+
+        kernel2 = np.ones((6, 6), np.uint8)
 
         for i in range(len(self.med_loc)):
-            img_polar = PelletsDetector.img_polar_transfrom(
-                self.img_crop, self.med_loc[i]
-            )
-            clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(3, 3))
+            img_polar = PelletsDetector.img_polar_transfrom(self.img_crop, self.med_loc[i])
+            clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(5, 5))
             img_clahe = clahe.apply(img_polar)
-            sharpened = cv2.filter2D(
-                img_clahe, -1, np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]])
-            )
-
-            blurred_image = cv2.GaussianBlur(sharpened, (5, 5), 0)
-            blurred_image = median_filter(blurred_image, size=5)
-            erosion = cv2.erode(blurred_image, kernel2, iterations=1)
+            
+            sobel_y = cv2.Sobel(img_clahe, cv2.CV_64F, 0, 1, ksize=3)
+            sobel_y = cv2.convertScaleAbs(sobel_y)
+            enhanced = cv2.addWeighted(img_clahe, 1.0, sobel_y, 1.5, 0)
+            enhanced = cv2.equalizeHist(enhanced)
+            
+            sharpened = cv2.filter2D(enhanced, -1, np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]]))
+            blurred_image = cv2.GaussianBlur(sharpened, (3,3), 0)
+            blurred_image = median_filter(blurred_image, size=3)
+            
+            erosion = cv2.erode(enhanced, kernel2, iterations=1)
             dilation = cv2.dilate(erosion, kernel2, iterations=1)
             closing = cv2.morphologyEx(dilation, cv2.MORPH_CLOSE, kernel2)
-
-            brightness = 0.3
+            brightness = 0.2
             contrast = 1.5
-            sharpened = cv2.addWeighted(
-                closing, contrast, np.zeros(closing.shape, closing.dtype), 0, brightness
-            )
+            sharpened = cv2.addWeighted(closing, contrast, np.zeros(closing.shape, closing.dtype), 0, brightness)
             normalized = cv2.normalize(sharpened, None, 0, 255, cv2.NORM_MINMAX)
             closing_list.append(normalized.astype(np.uint8))
 
         intensity_r = []
         global_closing_list_sort = closing_list
-
         for i in range(len(self.med_loc)):
             global_closing_list_sort[i] = np.sort(closing_list[i])
+        
         for i in range(len(self.med_loc)):
-            intensity_r.append(
-                [
-                    PelletsDetector.calculate_trimmed_mean(inten)
-                    for inten in global_closing_list_sort[i][0:440]
-                ]
-            )
+            raw_intensity = [PelletsDetector.calculate_trimmed_mean(inten) for inten in global_closing_list_sort[i][0:420]]
+            smoothed_intensity = PelletsDetector.smooth_1d_profile_adaptive_brightness(raw_intensity, window_size=5, sensitivity=0.5)
+            intensity_r.append(gaussian_filter1d(smoothed_intensity, sigma=2))
+            
+        for i in range(len(self.med_loc)):
+            img_polar_original = PelletsDetector.img_polar_transfrom(self.img_crop, self.med_loc[i])   
+            img = global_closing_list_sort[i]
+            height, width = img.shape
+            
+            intensity_r_image = np.array(intensity_r[i]).reshape(-1, 1)  # Reshape to column vector
+            intensity_r_image = np.tile(intensity_r_image, (1, width))
+            
+            angle_profile = np.array(intensity_r[i]) 
+            angle_profile = np.array(intensity_r[i]) / 255 * 100
 
-        for i in range(len(self.med_loc)):
-            y = np.array(intensity_r[i]).astype(float)
-            y = y / 255 * 100
-            y_mavg = moving_average(y, 3)
+            angle_y_mavg = moving_average(angle_profile, 2)
             for r in range(self.med_rad[0]):
-                y_mavg[r] = 100
+                angle_y_mavg[r] = 100
+            
+            angle_dy = np.diff(angle_y_mavg)
+            angle_dy[:self.med_rad[0] + 20] = np.abs(angle_dy[:self.med_rad[0] + 20])
+            threshold = np.mean(moving_average(abs(angle_dy), 4)) / np.std(angle_dy) + 0.3
+            # threshold = 0.5
+            
+            peaks, _ = find_peaks(angle_dy, height=threshold)
+            peaks = [int(p) for p in peaks]
 
-            all_change_points = []
+            if len(peaks) >= 2 and len(peaks) < 10:
+                peaks.sort()
+                highest_peak = max(peaks, key=lambda p: angle_dy[p])
+                
+                second_highest_peak = None
+                for peak in peaks:
+                    if peak > highest_peak and (peak - highest_peak) > 20:
+                        second_highest_peak = peak
+                        break
 
-            for x in range(0, 360, 5):
-                angle_profile = global_closing_list_sort[i][:, x]
-                angle_profile = angle_profile / 255 * 100
+                if second_highest_peak:
+                    for peak in peaks:
+                        if peak > second_highest_peak and (peak - second_highest_peak) <= 300:
+                            if angle_dy[peak] > angle_dy[second_highest_peak]: 
+                                second_highest_peak = peak
+                                
+                if 500 <= height <= 550 and second_highest_peak is not None and second_highest_peak > 380:
+                    second_highest_peak = highest_peak  
+                    
+                if second_highest_peak and second_highest_peak != highest_peak and height >= 200 and second_highest_peak <= 360:
+                    small_peaks, _ = find_peaks(angle_dy, height=0)
+                    small_peaks = [int(p) for p in small_peaks if angle_dy[p] < threshold]
+                    
+                    avg_value = 0
+                    if small_peaks:
+                        avg_value = sum(angle_dy[p] for p in small_peaks) / len(small_peaks)
+                        selected_peak_value = angle_dy[second_highest_peak]
+                        diff = abs(selected_peak_value - avg_value)
+                        print(f"Medicine {i} - Selected peak value: {selected_peak_value:.3f}")
+                        print(f"Medicine {i} - Difference between selected peak and average: {diff:.3f}")
+                        similarity_threshold = 0.5
+                        if diff < similarity_threshold:
+                            print(f"Medicine {i} - Difference is below threshold using med rad instead")
+                            second_highest_peak = highest_peak
+                            
+               
+                if second_highest_peak and second_highest_peak != highest_peak:
+                    peak_value = angle_dy[second_highest_peak]
+                    if (peak_value - threshold) < 0.1 and (second_highest_peak - highest_peak) <= 200:
+                        second_highest_peak = highest_peak
+    
+                if second_highest_peak and second_highest_peak != highest_peak and second_highest_peak > 405:
+                    second_highest_peak = highest_peak
 
-                angle_y_mavg = moving_average(angle_profile, 3)
-                for r in range(self.med_rad[0]):
-                    angle_y_mavg[r] = 100
-
-                angle_dy = np.diff(angle_y_mavg)
-                angle_dy[: self.med_rad[0] + 20] = np.abs(
-                    angle_dy[: self.med_rad[0] + 20]
-                )
-
-                threshold = (
-                    np.mean(moving_average(abs(angle_dy), 3)) / np.std(angle_dy) + 0.45
-                )
-                angle_change_points = np.arange(0, len(angle_dy), 2)[
-                    (angle_dy)[::2] > threshold
-                ]
-                all_change_points.extend(angle_change_points)
-
-            img_width = closing_list[i].shape[0]
-            max_height = 450 if img_width > 450 else img_width
-
-            filtered_change_points = [cp for cp in all_change_points if cp < max_height]
-
-            bins = np.arange(0, max_height, 5)
-            hist, bin_edges = np.histogram(filtered_change_points, bins=72)
-            bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
-
-            non_zero_bins = np.where(hist > 0)[0]
-
-            if len(non_zero_bins) == 0:
-                selected_peak_index = 0
+                if second_highest_peak is None:
+                    second_highest_peak = highest_peak
             else:
-                first_bar_index = non_zero_bins[0]
-                max_bin_index = np.argmax(hist)
+                highest_peak = second_highest_peak = self.med_rad[i]  # Fallback to med_rad
+            
 
-                peaks, _ = find_peaks(hist, height=0.2 * np.max(hist))
-                peaks_after = [p for p in peaks if p >= first_bar_index + 10]
-
-                if len(peaks) > 5:
-                    selected_peak_index = np.argmax(hist)
-                else:
-                    if first_bar_index <= max_bin_index < first_bar_index + 10:
-                        if hist[max_bin_index] >= 0.7 * hist[first_bar_index]:
-                            selected_peak_index = max_bin_index
-                        else:
-                            selected_peak_index = first_bar_index
-                    else:
-                        selected_peak_index = max_bin_index
-
-                    if peaks_after:
-                        selected_peak_index = peaks_after[0]
-
-            if hist[selected_peak_index] <= 35:
-                most_frequent_y_range = bin_centers[first_bar_index]
+            predict_radius = second_highest_peak - self.med_rad[i]
+            
+            if second_highest_peak == highest_peak:
+                inhibition_zone_diam.append(6.35)
+                inhibition_zone_pixels.append(self.med_rad[i])
             else:
-                most_frequent_y_range = bin_centers[selected_peak_index]
-
-            predict_radius = most_frequent_y_range - self.med_rad[i]
-            inhibition_zone_diam.append(
-                round((self.med_rad[i] + predict_radius) * self.scale_factor * 2, 2)
-            )
-            inhibition_zone_pixels.append(int(self.med_rad[i] + predict_radius))
-
+                value = float((self.med_rad[i] + predict_radius) * self.scale_factor * 2)
+                rounded_value = float(Decimal(value).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
+                inhibition_zone_diam.append(rounded_value)
+                inhibition_zone_pixels.append(int(self.med_rad[i] + predict_radius))
+            
         self.inhibition_zone_pixels = inhibition_zone_pixels
         self.inhibition_zone_diam = inhibition_zone_diam
-        print(f"Inhibition Zone Pixels: {self.inhibition_zone_pixels}")
-        print(f"Inhibition Zone Diameter: {self.inhibition_zone_diam}")
+        print("pixel = ", inhibition_zone_pixels)
+        print("diam = ", inhibition_zone_diam)
 
 
 class Interpretator:
@@ -322,7 +352,6 @@ class Interpretator:
             return [input_antibiotic, "(R) ", input_diam, " mm "]
 
         else:
-            # return ["Error", f"Antimicrobial or Bacteria not found {input_diam}", None]
             return [input_antibiotic, " ", input_diam, " mm "]
 
 
@@ -430,62 +459,6 @@ class ProcessImage(Resource):
             logging.error(f"Unexpected error: {error_message}")
             return f"Error while import image {str(e)}", 500
 
-# @newtest_ns.route("/test_info")
-# class PostMedData(Resource):
-#     @jwt_required()
-#     def post(self):
-#         try:
-#             data = request.get_json()
-#             username = get_jwt_identity()
-
-#             required_fields = ["testId", "bacteriaName", "newDataPoint"]
-#             for field in required_fields:
-#                 if field not in data:
-#                     return jsonify({"error": f"Missing field: {field}"}), 400
-
-#             interpretion.test_id = data["testId"]
-#             interpretion.bacteria_name = data["bacteriaName"]
-#             interpretion.username = username
-#             new_data_points = data["newDataPoint"]
-#             new_arrays = []
-
-#             print("data", data)
-#             print("interpretion.test_id", interpretion.test_id)
-#             print("interpretion.bacteria_name", interpretion.bacteria_name)
-#             print("interpretion.username", interpretion.username)
-#             print("new_data_points", new_data_points)
-
-#             try:
-#                 print(len(new_data_points))
-#                 for i in range(len(new_data_points)):
-
-#                     interpretion.input_antibiotic = str(new_data_points[i][0])
-#                     interpretion.input_diam = float(
-#                         round(
-#                             new_data_points[i][1] * pellets_detector.scale_factor * 2, 2
-#                         )
-#                     )
-#                     interpretion.input_bacteria = str(interpretion.bacteria_name)
-#                     print("input_antibiotic : ", interpretion.input_antibiotic)
-#                     print("input_diam : ", interpretion.input_diam)
-#                     print("input_bacteria : ", interpretion.input_bacteria)
-#                     new_arrays.append(interpretion.callable_zone())
-#             except Exception as e:
-#                 return (
-#                     jsonify(
-#                         {
-#                             "error": str(e),
-#                             "message": "Error when interpreting inhibition zone",
-#                         }
-#                     ),
-#                     500,
-#                 )
-
-#             print("Final response data:", new_arrays)
-#             return make_response(jsonify(new_arrays), 200)
-
-#         except Exception as e:
-#             return jsonify({"error": str(e)}), 500
 @newtest_ns.route('/test_info')   
 class PostMedData(Resource):
     @jwt_required()
@@ -565,7 +538,6 @@ class PostMedData(Resource):
 def generate_zone_id():
     while True:
         zone_id = random.randint(1000, 9999)
-        # Check if zone id already exist in the database if not return generate zone id
         if not InhibitionZone.query.filter_by(zone_id=zone_id).first():
             return zone_id
 
@@ -575,7 +547,6 @@ def get_latest_edit_number(test_id):
         .filter(InhibitionZoneHistory.test_id == test_id)
         .scalar()
     )
-
     return latest_edit if latest_edit is not None else 0
 
 import json
@@ -594,8 +565,6 @@ class AddData(Resource):
             data_json = request.form.get('data')
             if not data_json:
                 return {"error": "Missing data"}, 400
-
-            print(f"Received data: {data_json[:100]}...")  # แสดงเฉพาะส่วนแรก
             
             new_data = json.loads(data_json)
             test_id = new_data.get('testId')
@@ -604,7 +573,6 @@ class AddData(Resource):
             new_data_points = new_data.get('newDataPoint')
             created_at_str = new_data.get('createdAt')
             
-            # แปลงรูปแบบวันที่เวลา
             try:
                 # created_at = datetime.strptime(created_at_str, "%Y-%B-%d %H:%M:%S")
                 created_at = datetime.strptime(created_at_str, "%Y-%m-%d %H:%M:%S")
@@ -631,34 +599,29 @@ class AddData(Resource):
             try:
                 ext = image.filename.rsplit('.', 1)[1].lower()
             except IndexError:
-                ext = "png"  # ใช้ค่าเริ่มต้นถ้าไม่มีนามสกุลไฟล์
+                ext = "png"
                 
             filename = secure_filename(f"{test_id}_{timestamp}.{ext}")
             filepath = os.path.join(UPLOAD_FOLDER, filename)
             
-            # ตรวจสอบว่าโฟลเดอร์มีอยู่จริง
+            # check if folder exist
             if not os.path.exists(UPLOAD_FOLDER):
                 os.makedirs(UPLOAD_FOLDER)
                 
-            # บันทึกไฟล์รูปภาพ
             try:
                 image.save(filepath)
                 print(f"Image saved to {filepath}")
             except Exception as img_error:
                 return {"error": f"Failed to save image: {str(img_error)}"}, 500
 
-            # เตรียมการเขียนข้อมูล
             output_inhibition = []
             output_history = []
 
-            # ค้นหาหรือสร้าง test
             existing_test = ASTtest.query.filter_by(test_id=test_id).first()
             if existing_test:
-                # มี update ใน model หรือไม่
                 if hasattr(existing_test, 'update') and callable(existing_test.update):
                     existing_test.update(bacteria_name, username)
                 else:
-                    # ถ้าไม่มี update ให้อัพเดต field โดยตรง
                     existing_test.bacteria_name = bacteria_name
                     existing_test.username = username
                     
@@ -1115,7 +1078,7 @@ class getReportByAntibiotic(Resource):
                             }
                             for zone in test.inhibition_zone_history
                             if zone.antibiotic_name
-                            == antibiotic_name  # Ensure filtering in history too
+                            == antibiotic_name
                         ],
                     }
                     for test in tests
@@ -1136,10 +1099,9 @@ class getSearchReport(Resource):
         print("Query parameters received:", request.args)
         print("------------------------------------------")
 
-        # Start query from InhibitionZoneHistory and join with ASTtest
+        # query from InhibitionZoneHistory and join with ASTtest
         query = db.session.query(InhibitionZoneHistory, ASTtest).join(ASTtest, InhibitionZoneHistory.test_id == ASTtest.test_id)
 
-        # Apply filters
         if test_id:
             query = query.filter(InhibitionZoneHistory.test_id == test_id)
 
@@ -1156,7 +1118,7 @@ class getSearchReport(Resource):
             except ValueError:
                 return {"error": "Invalid date format. Use YYYY-MM-DD"}, 400
 
-        # Fetch and format results
+        # Fetch and format result
         results = query.all()
 
         report_data = {}
