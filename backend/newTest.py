@@ -816,6 +816,8 @@ class InhibitionZoneHistoryResource(Resource):
     @jwt_required()
     def get(self, test_id):
         try:
+            med_rad_values = pellets_detector.med_rad[0]
+            
             history = InhibitionZone.query.filter_by(test_id=test_id).all()
             result = []
             for item in history:
@@ -832,7 +834,12 @@ class InhibitionZoneHistoryResource(Resource):
                         ),
                     }
                 )
-            return result, 200
+            # return result, 200
+            return {
+                "history": result,
+                "med_rad": med_rad_values
+            }, 200
+            
         except Exception as e:
             return {"error": str(e)}, 500
 

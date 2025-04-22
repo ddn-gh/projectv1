@@ -26,6 +26,8 @@ export default function AddDataNumber({ onNext, onBack, currentInde, dataLength 
   const savedNamePx = localStorage.getItem("namePx"); // add
   const [previousRadius, setPreviousRadius] = useState([]);
 
+  const [noZoneRadius, setNoZoneRadius] = useState(76);
+
   useEffect(() => {
     if (testId) {
       fetchPreviousData();
@@ -49,6 +51,9 @@ export default function AddDataNumber({ onNext, onBack, currentInde, dataLength 
 
       let diameterOld = [];
       let pixelOld = [];
+
+      const medRadValue = response.data?.med_rad ?? 76; 
+      setNoZoneRadius(medRadValue);
 
       if (
         response.data &&
@@ -140,10 +145,10 @@ export default function AddDataNumber({ onNext, onBack, currentInde, dataLength 
                       className="checkbox-left"
                       id="circleRadiusCheckbox"
                       type="checkbox"
-                      checked={!circlStatus && circleRadius === 76}
+                      checked={!circlStatus && circleRadius === noZoneRadius}
                       onChange={(e) => {
                         setCirclStatus(false);
-                        setCircleRadius(e.target.checked ? 76 : 0);
+                        setCircleRadius(e.target.checked ? noZoneRadius : 0);
                       }}
                     />
                     <label htmlFor="circleRadiusCheckbox">
