@@ -12,9 +12,12 @@ class ASTtest(db.Model):
     image_filename = db.Column(db.String(), nullable=True)
     
     user = db.relationship('User', back_populates='tests')
-    inhibition_zones = db.relationship('InhibitionZone', back_populates='test')
+    # inhibition_zones = db.relationship('InhibitionZone', back_populates='test')
+    inhibition_zones = db.relationship('InhibitionZone', back_populates='test', passive_deletes=True)
+
     history = db.relationship('TestHistory', back_populates='test', overlaps="test_history")
-    inhibition_zone_history = db.relationship('InhibitionZoneHistory', back_populates='test')
+    # inhibition_zone_history = db.relationship('InhibitionZoneHistory', back_populates='test')
+    inhibition_zone_history = db.relationship('InhibitionZoneHistory', back_populates='test', passive_deletes=True)
     
     def __repr__(self):
         return f"<Test {self.bacteria_name} >"
@@ -77,7 +80,9 @@ class InhibitionZone(db.Model):
     __tablename__ = 'inhibition_zone'
     
     zone_id = db.Column(db.Integer, primary_key=True)
-    test_id = db.Column(db.Integer, db.ForeignKey('asttest.test_id', ondelete='SET NULL'), nullable=False) 
+    # test_id = db.Column(db.Integer, db.ForeignKey('asttest.test_id', ondelete='SET NULL'), nullable=False) 
+    test_id = db.Column(db.Integer, db.ForeignKey('asttest.test_id', ondelete='CASCADE'), nullable=False)
+
 
     antibiotic_name = db.Column(db.String(), nullable=True)
     diameter = db.Column(db.Float(), nullable=True)
@@ -113,7 +118,8 @@ class InhibitionZoneHistory(db.Model):
     __tablename__ = 'inhibition_zone_history'
     
     history_id = db.Column(db.Integer(), primary_key=True, autoincrement=True)
-    test_id = db.Column(db.Integer(), db.ForeignKey('asttest.test_id', ondelete='SET NULL'), nullable=False) 
+    # test_id = db.Column(db.Integer(), db.ForeignKey('asttest.test_id', ondelete='SET NULL'), nullable=False) 
+    test_id = db.Column(db.Integer(), db.ForeignKey('asttest.test_id', ondelete='CASCADE'), nullable=False)
     
     number_of_test = db.Column(db.Integer(), nullable=True)
     antibiotic_name = db.Column(db.String(), nullable=True)

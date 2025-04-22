@@ -27,17 +27,6 @@ form {
     font-size: 16px;
 }
 
-/*
-.button {
-    font-size: 1rem;
-    padding: 10px 25px;
-    font-weight: bold;
-    border-radius: 30px;
-    background-color: #c2dfe3;
-    cursor: pointer;
-    color: black;
-}
-*/
 .button {
 font-size: 1rem;
   padding: 12px 30px;
@@ -63,3 +52,47 @@ p {
     font-size: 14px;
     text-align: left;
 }
+
+
+
+
+
+
+/* Bootstrap Button overrides */
+.button-container .button {
+    font-size: 1rem;
+    padding: 12px 30px;
+    font-weight: bold;
+    border-radius: 30px;
+    background-color: #c2dfe3; /* Light background color */
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);
+    cursor: pointer;
+    color: #333; /* Text color */
+    border: 2px solid #c2dfe3; /* Match border with the background */
+  }
+  
+  /* Bootstrap Button on hover */
+  .button-container .button:hover {
+    background-color: #87b7c7; /* Lighter blue */
+    color: white; /* Text color changes to white */
+    border-color: #87b7c7; /* Border matches the hover background */
+  }
+  
+  /* Bootstrap Button active state */
+  .button-container .button:active {
+    background-color: #88a7b7; /* Darker blue on click */
+    color: white; /* Maintain white text */
+    border-color: #88a7b7; /* Border matches active background */
+  }
+  
+  /* Focus state */
+  .button-container .button:focus {
+    outline: none; /* Remove default focus outline */
+    box-shadow: 0 0 0 4px rgba(194, 223, 227, 0.6); /* Optional: soft focus ring */
+  }
+  
+  /* Bootstrap button states */
+  .button-container .button:focus-visible {
+    outline: 2px solid #88a7b7; /* Optional: Outline on focus-visible for accessibility */
+  }
+  

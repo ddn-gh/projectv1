@@ -951,7 +951,6 @@ class GetDataByTestID(Resource):
             bacteria_name=data.get("bacteria"),
             username=username,
         )
-
         new_test.save()
         return new_test, 201
 
@@ -1001,6 +1000,13 @@ class GetDataByTestID(Resource):
                 else history
             ),
         }, 200
+        
+    def delete(self, test_id):
+        test_to_delete = ASTtest.query.filter_by(test_id=test_id).first()
+        if not test_to_delete:
+            return {"message": "Test not found"}, 404
+        test_to_delete.delete()
+        return {"message": "Test deleted successfully"}, 200
 
 
 @newtest_ns.route("/get_result_by_testID/<int:test_id>")

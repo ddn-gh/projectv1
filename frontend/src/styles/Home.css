@@ -57,3 +57,17 @@ html, body {
   margin-top: 7px;
   text-align: 'center';
 }
+
+
+/* Add this to your Home.css or relevant CSS file */
+.delete-test-button {
+  padding: 10px;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px; /* Optional: for rounded corners */
+}
+
+.delete-test-button:hover {
+  color:#ff0000 !important; /* Red-ish background on hover */
+}
+

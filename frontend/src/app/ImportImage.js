@@ -104,8 +104,8 @@ const ImportImage = () => {
           </form>
         </div>
   
-        <div className="next-button-container">
-          <button type="submit" onClick={handleSubmit} className="next-button">
+        <div className="button-container">
+          <button type="submit" onClick={handleSubmit} className="button">
             ANALYZE
           </button>
         </div>
