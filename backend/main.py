@@ -42,8 +42,13 @@ def create_app():
     
     @app.route('/uploads/<filename>')
     def uploaded_file(filename):
-        uploads_dir = os.path.join(os.getcwd(), 'uploads')
+        uploads_dir = os.path.join(os.getcwd(), '/data/uploads')
         return send_from_directory(uploads_dir, filename)
+
+    # @app.route('/uploads/<filename>')
+    # def uploaded_file(filename):
+    #     uploads_dir = os.path.join(os.getcwd(), 'uploads')
+    #     return send_from_directory(uploads_dir, filename)
 
     @app.shell_context_processor
     def make_shell_context():

@@ -31,7 +31,8 @@ from sqlalchemy import and_, desc
 import pytz
 from scipy.ndimage import gaussian_filter1d
 
-UPLOAD_FOLDER = "uploads"
+# UPLOAD_FOLDER = "uploads"
+UPLOAD_FOLDER = "/data/uploads"
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg"}
 
 
