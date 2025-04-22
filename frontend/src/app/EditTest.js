@@ -23,7 +23,7 @@
 //                 }
 //             };
 //             try {
-//                 const response = await fetch(`http://localhost:3001/ASTtest/get_test_data_by_Id/${test_id}`, requestOptions);
+//                 const response = await fetch(`https://asttestapp.onrender.com/ASTtest/get_test_data_by_Id/${test_id}`, requestOptions);
 //                 if (!response.ok) {
 //                     if (response.status === 401) {
 //                         alert('Session expired, please log in again');
@@ -63,7 +63,7 @@
 //         };
 
 //         try {
-//             const response = await fetch(`http://localhost:3001/ASTtest/get_test_data_by_Id/${test_id}`, requestOptions);
+//             const response = await fetch(`https://asttestapp.onrender.com/ASTtest/get_test_data_by_Id/${test_id}`, requestOptions);
 //             if (!response.ok) {
 //                 alert('Failed to update test');
 //                 return;
@@ -95,7 +95,7 @@
 //             body: JSON.stringify(payload)
 //         };
 //         try {
-//             const response = await fetch(`http://localhost:3001/ASTtest/get_test_data_by_Id/${test_id}`, requestOptions);
+//             const response = await fetch(`https://asttestapp.onrender.com/ASTtest/get_test_data_by_Id/${test_id}`, requestOptions);
 //             if (!response.ok) {
 //                 alert('Failed to update bacteria');
 //                 return;
@@ -188,7 +188,7 @@ const EditTestPage = () => {
   const handleLoginRefresh = (data) => {
     // ใช้กรณี token หมดอายุ
     localStorage.setItem("auth", JSON.stringify(data));
-    fetch("http://localhost:3001/auth/login", {
+    fetch("https://asttestapp.onrender.com/auth/login", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -218,7 +218,7 @@ const EditTestPage = () => {
       };
       try {
         const response = await fetch(
-          `http://localhost:3001/ASTtest/get_test_data_by_Id/${test_id}`,
+          `https://asttestapp.onrender.com/ASTtest/get_test_data_by_Id/${test_id}`,
           requestOptions
         );
         if (!response.ok) {
@@ -261,7 +261,7 @@ const EditTestPage = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:3001/ASTtest/get_test_data_by_Id/${test_id}`,
+        `https://asttestapp.onrender.com/ASTtest/get_test_data_by_Id/${test_id}`,
         requestOptions
       );
       if (!response.ok) {
@@ -300,7 +300,7 @@ const EditTestPage = () => {
     };
     try {
       const response = await fetch(
-        `http://localhost:3001/ASTtest/get_test_data_by_Id/${test_id}`,
+        `https://asttestapp.onrender.com/ASTtest/get_test_data_by_Id/${test_id}`,
         requestOptions
       );
       if (!response.ok) {

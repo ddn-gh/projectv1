@@ -39,7 +39,7 @@ const ResultById = () => {
   const fetchDataResultById = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:3001/ASTtest/get_result_by_testID/${testId}`
+        `https://asttestapp.onrender.com/ASTtest/get_result_by_testID/${testId}`
       );
       const responseData = response.data;
       if (responseData) {
@@ -148,7 +148,7 @@ const ResultById = () => {
           {test?.image_filename && (
             <div className="image-container">
               <img
-                src={`http://localhost:3001/uploads/${test.image_filename}`}
+                src={`https://asttestapp.onrender.com/uploads/${test.image_filename}`}
                 alt="AST Result"
               />
             </div>

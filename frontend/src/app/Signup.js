@@ -17,7 +17,7 @@ const SignUpPage = () => {
         password: data.password
       };
 
-      axios.post('http://localhost:3001/auth/signup', body)
+      axios.post('https://asttestapp.onrender.com/auth/signup', body)
         .then(response => {
           console.log(response.data);
           

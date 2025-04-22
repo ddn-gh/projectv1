@@ -21,7 +21,7 @@
 //       body:JSON.stringify(data)
 //     }
 
-//     fetch('http://localhost:3001/auth/login',requestOptions)
+//     fetch('https://asttestapp.onrender.com/auth/login',requestOptions)
 //     .then(res=>res.json())
 //     .then(data=>{
 //         console.log(data.access_token)
@@ -111,7 +111,7 @@ const LoginPage = () => {
       body: JSON.stringify(data),
     };
 
-    fetch("http://localhost:3001/auth/login", requestOptions)
+    fetch("https://asttestapp.onrender.com/auth/login", requestOptions)
       .then((res) => res.json())
       .then((data) => {
         console.log(data.access_token);

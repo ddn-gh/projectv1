@@ -52,7 +52,7 @@
 //      * */
 //     try {
 //       const response = await axios.get(
-//         `http://localhost:3001/ASTtest/inhibition/${testId}`,
+//         `https://asttestapp.onrender.com/ASTtest/inhibition/${testId}`,
 //         {
 //           headers: {
 //             Authorization: `Bearer ${JSON.parse(token)}`,
@@ -117,7 +117,7 @@
 //     try {
 //       console.log("Original newData:", newData);
 //       const response = await axios.post(
-//         "http://localhost:3001/ASTtest/test_info",
+//         "https://asttestapp.onrender.com/ASTtest/test_info",
 //         {
 //           testId: testId,
 //           bacteriaName: bacteria,
@@ -316,7 +316,7 @@ const AddDataName = ({ onShowNumberInput, currentInde, dataLength }) => {
      * */
     try {
       const response = await axios.get(
-        `http://localhost:3001/ASTtest/inhibition/${testId}`,
+        `https://asttestapp.onrender.com/ASTtest/inhibition/${testId}`,
         {
           headers: {
             Authorization: `Bearer ${JSON.parse(token)}`,
@@ -408,7 +408,7 @@ const AddDataName = ({ onShowNumberInput, currentInde, dataLength }) => {
         return;
       }
       
-      const response = await axios.post('http://localhost:3001/ASTtest/test_info', {
+      const response = await axios.post('https://asttestapp.onrender.com/ASTtest/test_info', {
         testId: testId,
         bacteriaName: bacteria,
         newDataPoint: formattedData

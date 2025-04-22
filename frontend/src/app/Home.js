@@ -21,7 +21,7 @@
 
 //   useEffect(
 //     ()=>{
-//       fetch('http://localhost:3001/ASTtest/get_test_data')
+//       fetch('https://asttestapp.onrender.com/ASTtest/get_test_data')
 //       .then(res=>res.json())
 //       .then(data=>{
 //         console.log(data)
@@ -130,7 +130,7 @@ const LoggedinHome = ({ onClick, onDelete }) => {
 
 
   useEffect(() => {
-    fetch("http://localhost:3001/ASTtest/get_test_data")
+    fetch("https://asttestapp.onrender.com/ASTtest/get_test_data")
       .then((res) => res.json())
       .then((data) => {
         console.log(data);
@@ -143,7 +143,7 @@ const LoggedinHome = ({ onClick, onDelete }) => {
   const handleDelete = (testId, e) => {
     e.stopPropagation();
 
-    fetch(`http://localhost:3001/ASTtest/get_test_data_by_Id/${testId}`, {
+    fetch(`https://asttestapp.onrender.com/ASTtest/get_test_data_by_Id/${testId}`, {
       method: 'DELETE',
     })
       .then(() => {
@@ -212,7 +212,7 @@ const LoggedOutHome = () => {
 
   const [test, setTest] = useState([]);
   useEffect(() => {
-    fetch("http://localhost:3001/ASTtest/get_test_data")
+    fetch("https://asttestapp.onrender.com/ASTtest/get_test_data")
       .then((res) => res.json())
       .then((data) => {
         console.log(data);

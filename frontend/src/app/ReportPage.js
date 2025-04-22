@@ -27,7 +27,7 @@ const ReportPage = () => {
   ];
 
   const fetchLatestData = () => {
-    fetch('http://localhost:3001/ASTtest/report/latest')
+    fetch('https://asttestapp.onrender.com/ASTtest/report/latest')
       .then((response) => response.json())
       .then((data) => {
         setReportData(data);
@@ -36,7 +36,7 @@ const ReportPage = () => {
   };
 
   const fetchReportData = () => {
-    let url = 'http://localhost:3001/ASTtest/report/search?';
+    let url = 'https://asttestapp.onrender.com/ASTtest/report/search?';
 
     if (testId) url += `test_id=${testId}&`;
     if (username) url += `username=${username}&`;

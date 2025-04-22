@@ -30,7 +30,7 @@
 //         }
 
 //             try {
-//                 const response = await fetch(`http://localhost:3001/ASTtest/get_test_data`, requestOptions);
+//                 const response = await fetch(`https://asttestapp.onrender.com/ASTtest/get_test_data`, requestOptions);
           
 //                 if (!response.ok) {
 //                   if (response.status === 401) {
@@ -127,7 +127,7 @@ const CreateNewTestPage = () => {
   const handleLoginRefresh = (data) => {
     // ใช้กรณี token หมดอายุ
     localStorage.setItem("auth", JSON.stringify(data));
-    fetch("http://localhost:3001/auth/login", {
+    fetch("https://asttestapp.onrender.com/auth/login", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -154,7 +154,7 @@ const CreateNewTestPage = () => {
 
     try {
       const response = await authFetch(
-        `http://localhost:3001/ASTtest/get_test_data`,
+        `https://asttestapp.onrender.com/ASTtest/get_test_data`,
         {
           method: "POST",
           headers: {

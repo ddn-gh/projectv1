@@ -50,7 +50,7 @@ const ImportImage = () => {
       try {
         setStatus('Processing image...');
         setLoading(true);
-        const response = await fetch('http://localhost:3001/ASTtest/process_image', {
+        const response = await fetch('https://asttestapp.onrender.com/ASTtest/process_image', {
           method: 'POST',
           body: formData,
         });

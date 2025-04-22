@@ -41,7 +41,7 @@ export default function AddDataNumber({ onNext, onBack, currentInde, dataLength 
     try {
       const token = localStorage.getItem("REACT_TOKEN_AUTH_KEY");
       const response = await axios.get(
-        `http://localhost:3001/ASTtest/inhibition/${testId}`,
+        `https://asttestapp.onrender.com/ASTtest/inhibition/${testId}`,
         {
           headers: {
             Authorization: `Bearer ${JSON.parse(token)}`,

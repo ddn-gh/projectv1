@@ -404,7 +404,7 @@ const ResultPage = () => {
       console.log('Sending data:', formattedTestData);
     
       const response = await axios.post(
-        'http://localhost:3001/ASTtest/add_data',
+        'https://asttestapp.onrender.com/ASTtest/add_data',
         formData,
         {
           headers: {
