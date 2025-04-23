@@ -278,47 +278,21 @@ export default function AddDataNumber({ onNext, onBack, currentInde, dataLength 
   
       const medRadValue = response.data?.med_rad ?? 76; 
       setNoZoneRadius(medRadValue);
+
+      const historyData = response.data.history;
   
-      // if (Array.isArray(historyData) && historyData.length > 0) {
-      //   const sortedData = [...historyData].sort(
-      //     (a, b) => a.zone_id - b.zone_id
-      //   );
+      if (Array.isArray(historyData) && historyData.length > 0) {
+        const sortedData = [...historyData].sort(
+          (a, b) => a.zone_id - b.zone_id
+        );
   
-      //   diameterOld = sortedData.map((item) => item.diameter);
-      //   pixelOld = sortedData.map((item) => item.pixel);
-  
-      //   if (edit_status === "true") {
-      //     const match = sortedData.find(
-      //       (item) => item.antibiotic_name === savedNamePx
-      //     );
-      //     if (match) {
-      //       setPreviousRadius(diameterOld);
-      //       setCircleRadius(match.pixel);
-      //       setCircleRadiusOld(match.pixel);
-      //       setOriginalPixel(match.pixel);
-      //     }
-      //   } else {
-      //     setPreviousRadius(data[2]);
-      //     setCircleRadius(data[2]);
-      //     setCirclStatus(false);
-      //   }
-      // }
-      if (
-        response.data &&
-        Array.isArray(response.data.history) &&
-        response.data.history.length > 0
-      ) {
-        const historyData = response.data.history;
-  
-        const sortedData = [...historyData].sort((a, b) => a.zone_id - b.zone_id);
         diameterOld = sortedData.map((item) => item.diameter);
         pixelOld = sortedData.map((item) => item.pixel);
   
         if (edit_status === "true") {
-          const match = response.data.history.find(
+          const match = historyData.find(
             (item) => item.antibiotic_name === savedNamePx
           );
-  
           if (match) {
             setPreviousRadius(diameterOld);
             setCircleRadius(match.pixel);
