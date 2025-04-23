@@ -334,6 +334,13 @@ export default function AddDataNumber({ onNext, onBack, currentInde, dataLength 
     onBack(); 
   };
 
+  useEffect(() => {
+    if (edit_status === "false" && data[2] && circleRadius === data[2]) {
+      setCircleStatus(false);
+    }
+  }, [circleRadius, data[2], edit_status]);  
+  
+
   console.log("data (radius and position) : ", circleRadius, data[0], data[1]);
   console.log("circleRadius", circleRadius);
   console.log("data[2]", data[2]);
