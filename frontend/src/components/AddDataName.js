@@ -671,7 +671,7 @@ const AddDataName = ({ onShowNumberInput, currentInde, dataLength }) => {
      * */
     try {
       const response = await axios.get(
-        `https://testdeploy1-aqoq.onrender.com/ASTtest/inhibition/${testId}`,
+        `https://asttestapp.onrender.com/ASTtest/inhibition/${testId}`,
         {
           headers: {
             Authorization: `Bearer ${JSON.parse(token)}`,
@@ -680,12 +680,23 @@ const AddDataName = ({ onShowNumberInput, currentInde, dataLength }) => {
       );
       let antibioticNames = [];
 
+      // if (
+      //   response.data &&
+      //   Array.isArray(response.data) &&
+      //   response.data.length > 0
+      // ) {
+      //   antibioticNames = response.data.map((item) => item.antibiotic_name);
+      // }
+      /* fix fetch history */
       if (
         response.data &&
-        Array.isArray(response.data) &&
-        response.data.length > 0
+        response.data.history &&
+        Array.isArray(response.data.history) &&
+        response.data.history.length > 0
       ) {
-        antibioticNames = response.data.map((item) => item.antibiotic_name);
+        antibioticNames = response.data.history.map(
+          (item) => item.antibiotic_name
+        );
       }
 
       setPreviousAntibiotics(antibioticNames);
