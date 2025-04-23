@@ -300,8 +300,11 @@ export default function AddDataNumber({ onNext, onBack, currentInde, dataLength 
             setOriginalPixel(match.pixel);
           }
         } else {
-          setPreviousRadius(data[2]);
-          setCircleRadius(data[2]);
+          // setPreviousRadius(data[2]);
+          // setCircleRadius(data[2]);
+          // setCirclStatus(false);
+          setPreviousRadius(sortedData[0].pixel);
+          setCircleRadius(sortedData[0].pixel);
           setCirclStatus(false);
         }
       }
