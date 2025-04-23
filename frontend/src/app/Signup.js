@@ -19,17 +19,27 @@ const SignUpPage = () => {
 
       axios.post('https://asttestapp.onrender.com/auth/signup', body)
         .then(response => {
-          console.log(response.data);
-          
+          if (response.status === 201) {
+            alert("Account created successfully");
+            setTimeout(() => {
+              navigate('/login');
+            }, 1000);
+          }
         })
         .catch(error => {
           console.error(error);
+          if (error.response) {
+            if (error.response.status === 409) {
+              alert("Username or email already exist");
+            } else {
+              alert("Please try again.");
+            }
+          } else {
+            alert("Please try again.");
+          }
         });
 
       reset();
-      setTimeout(() => {
-        navigate('/login');
-      }, 2000);
     } else {
       alert("password not match");
     }

@@ -269,7 +269,6 @@ const EditTestPage = () => {
         return;
       }
       const result = await response.json();
-      console.log("Test updated:", result);
       setBacteriaName(data.bacteria);
 
       navigate("/");
@@ -309,7 +308,7 @@ const EditTestPage = () => {
         return;
       }
       const result = await response.json();
-      console.log("Bacteria updated:", result);
+
       navigate("/import");
     } catch (error) {
       console.error("Error updating bacteria:", error);

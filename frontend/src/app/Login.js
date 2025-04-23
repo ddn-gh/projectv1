@@ -101,8 +101,6 @@ const LoginPage = () => {
   const navigate = useNavigate();
 
   const loginUser = (data) => {
-    console.log(data);
-
     const requestOptions = {
       method: "POST",
       headers: {
