@@ -234,8 +234,8 @@ import axios from 'axios';
 export default function AddDataNumber({ onNext, onBack, currentInde, dataLength }) {
   const { data, updateData, editData } = usePointContext();
   const { testId } = useInputData();
-  // const [circleRadius, setCircleRadius] = useState(data[2]); 
-  const [circleRadius, setCircleRadius] = useState([]);
+  const [circleRadius, setCircleRadius] = useState(data[2]); 
+  //const [circleRadius, setCircleRadius] = useState(null);
 
   const [circleRadiusOld, setCircleRadiusOld] = useState([]);
   const [originalPixel, setOriginalPixel] = useState(null); // add
@@ -334,11 +334,17 @@ export default function AddDataNumber({ onNext, onBack, currentInde, dataLength 
     onBack(); 
   };
 
-  useEffect(() => {
-    if (edit_status === "false" && data[2] && circleRadius === data[2]) {
-      setCircleStatus(false);
-    }
-  }, [circleRadius, data[2], edit_status]);  
+  // useEffect(() => {
+  //   if (
+  //     edit_status === "false" &&
+  //     circleRadius !== null &&
+  //     typeof data[2] === "number" &&
+  //     circleRadius === data[2]
+  //   ) {
+  //     setCircleStatus(false);
+  //   }
+  // }, [circleRadius, data, edit_status]);
+  
   
 
   console.log("data (radius and position) : ", circleRadius, data[0], data[1]);
