@@ -241,7 +241,7 @@ export default function AddDataNumber({ onNext, onBack, currentInde, dataLength 
   const [originalPixel, setOriginalPixel] = useState(null); // add
 
   const [loading, setLoading] = useState(false);
-  const [circlStatus, setCirclStatus] = useState(true);
+  const [circleStatus, setCircleStatus] = useState(true);
   /**
    * !  เพิ่ม setCirclStatus
    * */
@@ -300,12 +300,9 @@ export default function AddDataNumber({ onNext, onBack, currentInde, dataLength 
             setOriginalPixel(match.pixel);
           }
         } else {
-          // setPreviousRadius(data[2]);
-          // setCircleRadius(data[2]);
-          // setCirclStatus(false);
-          setPreviousRadius(sortedData[0].pixel);
-          setCircleRadius(sortedData[0].pixel);
-          setCirclStatus(true);
+          setPreviousRadius(data[2]);
+          setCircleRadius(data[2]);
+          setCircleStatus(false);
         }
       }
     } catch (error) {
@@ -316,7 +313,7 @@ export default function AddDataNumber({ onNext, onBack, currentInde, dataLength 
   };  
 
   const handleSliderChange = (value) => {
-    setCirclStatus(false);
+    setCircleStatus(false);
     setCircleRadius(value);
   };
 
@@ -338,6 +335,10 @@ export default function AddDataNumber({ onNext, onBack, currentInde, dataLength 
   };
 
   console.log("data (radius and position) : ", circleRadius, data[0], data[1]);
+  console.log("circleRadius", circleRadius);
+  console.log("data[2]", data[2]);
+  console.log("circlStatus", circleStatus);
+
 
   return (
     <form className="form-container">
@@ -371,9 +372,9 @@ export default function AddDataNumber({ onNext, onBack, currentInde, dataLength 
                       className="checkbox-left"
                       id="circleRadiusCheckbox"
                       type="checkbox"
-                      checked={!circlStatus && circleRadius === noZoneRadius}
+                      checked={!circleStatus && circleRadius === noZoneRadius}
                       onChange={(e) => {
-                        setCirclStatus(false);
+                        setCircleStatus(false);
                         setCircleRadius(e.target.checked ? noZoneRadius : 0);
                       }}
                     />
@@ -387,9 +388,9 @@ export default function AddDataNumber({ onNext, onBack, currentInde, dataLength 
                       className="checkbox-left"
                       id="circleRadiusCheckbox2"
                       type="checkbox"
-                      checked={!circlStatus && circleRadius === data[2]}
+                      checked={!circleStatus && circleRadius === data[2]}
                       onChange={(e) => {
-                        setCirclStatus(false);
+                        setCircleStatus(false);
                         setCircleRadius(e.target.checked ? data[2] : 0);
                       }}
                     />
@@ -407,10 +408,10 @@ export default function AddDataNumber({ onNext, onBack, currentInde, dataLength 
                         className="checkbox-left"
                         id="circleRadiusCheckbox3"
                         type="checkbox"
-                        checked={circlStatus} // add
+                        checked={circleStatus} // add
                         onChange={(e) => {
                           setCircleRadius(e.target.checked ? originalPixel : 0); // add
-                          setCirclStatus(true);
+                          setCircleStatus(true);
                         }}
                       />
                       <label htmlFor="circleRadiusCheckbox3">
