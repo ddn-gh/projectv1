@@ -577,6 +577,8 @@ class AddData(Resource):
             new_data_points = new_data.get('newDataPoint')
             created_at_str = new_data.get('createdAt')
             
+            username = []
+            
             try:
                 # created_at = datetime.strptime(created_at_str, "%Y-%B-%d %H:%M:%S")
                 created_at = datetime.strptime(created_at_str, "%Y-%m-%d %H:%M:%S")
@@ -590,11 +592,11 @@ class AddData(Resource):
                 created_at = bk_tz.localize(created_at) 
                 created_at = created_at.astimezone(pytz.utc)
             
-            if not all([test_id, bacteria_name, username, new_data_points]):
+            if not all([test_id, bacteria_name, usernameEdit, new_data_points]):
                 missing = []
                 if not test_id: missing.append("testId")
                 if not bacteria_name: missing.append("bacteriaName")
-                if not username: missing.append("username")
+                if not usernameEdit: missing.append("usernameEdit")
                 if not new_data_points: missing.append("newDataPoint")
                 return {"error": f"Missing required fields: {', '.join(missing)}"}, 400
 
