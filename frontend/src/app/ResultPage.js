@@ -31,15 +31,34 @@ const ResultPage = () => {
   const formattedDateTime = format(bangkokDate, 'yyyy-MM-dd HH:mm:ss');
 
   const token = localStorage.getItem('REACT_TOKEN_AUTH_KEY');
-  let username = '';
+  let usernameEdit = '';
   if (token) {
     try {
       const decoded = jwtDecode(token);
-      username = decoded.sub;
+      usernameEdit = decoded.sub;
     } catch (error) {
       console.error('Error decoding token:', error);
     }
   }
+
+  // add fetch usernameCreate by test id
+  const [testData, setTestData] = useState(null);
+  useEffect(() => {
+    const fetchTestData = async () => {
+      try {
+        const response = await axios.get(`https://asttestapp.onrender.com/ASTtest/get_test_data_by_Id/${testId}`);
+        setTestData(response.data);
+      } catch (err) {
+        setError('Failed to fetch test data');
+        console.error('Error fetching test data:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchTestData();
+  }, [testId]);
+  const usernameCreate = testData?.username || 'Unknown';
+
 
   useEffect(() => {
     if (location.state?.newDataPoint) {
@@ -396,7 +415,8 @@ const ResultPage = () => {
       formData.append('data', JSON.stringify({
         testId,
         bacteriaName: bacteria,
-        username,
+        usernameEdit,
+        usernameCreate,
         newDataPoint: formattedTestData,
         createdAt: formattedDateTime
       }));
@@ -441,7 +461,7 @@ const ResultPage = () => {
                 <label>{testId}</label>
               </div>
               <div className="info-item">
-                <label className="font-bold">Created at :&nbsp;</label>
+                <label className="font-bold">Created on :&nbsp;</label>
                 <label>{formattedDateTime}</label>
               </div>
               <div className="info-item">
@@ -449,8 +469,8 @@ const ResultPage = () => {
                 <label>{bacteria}</label>
               </div>
               <div className="info-item">
-                <label className="font-bold">Last modify by :&nbsp;</label>
-                <label>{username}</label>
+                <label className="font-bold">Created by :&nbsp;</label>
+                <label>{usernameCreate}</label>
               </div>
             </div>
           </div>

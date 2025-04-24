@@ -11,7 +11,6 @@ const ResultById = () => {
   const [testInfo, setTestInfo] = useState([]);
   const [testResult, setTestResult] = useState([]);
   const { testId } = useParams();
-  const [testData, setTestData] = useState([]);
 
   const date = new Date();
   const day = date.getDate();
@@ -28,6 +27,24 @@ const ResultById = () => {
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
 
   const [historyData, setHistoryData] = useState([]);
+
+  // add fetch usernameCreate by test id
+  const [testData, setTestData] = useState(null);
+  useEffect(() => {
+    const fetchTestData = async () => {
+      try {
+        const response = await axios.get(`https://asttestapp.onrender.com/ASTtest/get_test_data_by_Id/${testId}`);
+        setTestData(response.data);
+      } catch (err) {
+        setError('Failed to fetch test data');
+        console.error('Error fetching test data:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchTestData();
+  }, [testId]);
+  const username = testData?.username || 'Unknown';
 
 
   useEffect(() => {
@@ -107,7 +124,7 @@ const ResultById = () => {
                     <label>{test.test_id}</label>
                   </div>
                   <div className="info-item">
-                    <label className="font-bold">Edit at :&nbsp;</label>
+                    <label className="font-bold">Edit on :&nbsp;</label>
                     {/* <label>{formatDate(test.created_at)}</label> */}
                     <label>{latestEditDate}</label>
                   </div>
@@ -116,8 +133,8 @@ const ResultById = () => {
                     <label>{test.bacteria_name}</label>
                   </div>
                   <div className="info-item">
-                    <label className="font-bold">Modified by :&nbsp;</label>
-                    <label>{test.username}</label>
+                    <label className="font-bold">Created by :&nbsp;</label>
+                    <label>{username}</label>
                   </div>
                 </>
               )}

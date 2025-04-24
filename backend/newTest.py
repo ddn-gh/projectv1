@@ -570,7 +570,10 @@ class AddData(Resource):
             new_data = json.loads(data_json)
             test_id = new_data.get('testId')
             bacteria_name = new_data.get('bacteriaName')
-            username = new_data.get('username')
+            # username = new_data.get('username')
+            usernameEdit = new_data.get('usernameEdit')
+            usernameCreate = new_data.get('usernameCreate')
+            
             new_data_points = new_data.get('newDataPoint')
             created_at_str = new_data.get('createdAt')
             
@@ -618,13 +621,14 @@ class AddData(Resource):
             output_inhibition = []
             output_history = []
 
+            # update test
             existing_test = ASTtest.query.filter_by(test_id=test_id).first()
             if existing_test:
                 if hasattr(existing_test, 'update') and callable(existing_test.update):
-                    existing_test.update(bacteria_name, username)
+                    existing_test.update(bacteria_name, usernameCreate)
                 else:
                     existing_test.bacteria_name = bacteria_name
-                    existing_test.username = username
+                    existing_test.username = usernameCreate
                     
                 existing_test.image_filename = filename
                 number_of_edit = get_latest_edit_number(test_id)
@@ -633,7 +637,7 @@ class AddData(Resource):
                 existing_test = ASTtest(
                     test_id=test_id,
                     bacteria_name=bacteria_name,
-                    username=username,
+                    # username=username,
                     created_at=created_at,
                     image_filename=filename
                 )
@@ -656,7 +660,7 @@ class AddData(Resource):
                     diameter=float(inhibition_diam),
                     pixel=inhibition_pixels,
                     resistant=resistant or "",
-                    username=username,
+                    username=usernameEdit,
                     created_at=created_at
                 )
                 db.session.add(inhibition_zone)
@@ -667,7 +671,7 @@ class AddData(Resource):
                     antibiotic_name=antibiotic_name,
                     diameter=float(inhibition_diam),
                     resistant=resistant or "",
-                    username=username,
+                    username=usernameEdit,
                     # edit_at=datetime.utcnow()
                     edit_at = created_at
                 )
@@ -823,7 +827,7 @@ class GetDataByTestID(Resource):
         print("Received data:", data)
         username = get_jwt_identity()
 
-        # เช็ก test_id ซ้ำ
+        # check test_id ซ้ำ
         existing_test = ASTtest.query.filter_by(test_id=data.get("test_id")).first()
         if existing_test:
             return {"message": "test id already exist"}, 400 
@@ -850,13 +854,14 @@ class GetDataByTestID(Resource):
     @jwt_required()
     def put(self, test_id):
         data = request.get_json()
-        username = get_jwt_identity()
+        # username = get_jwt_identity()
 
         existing_test = ASTtest.query.filter_by(test_id=test_id).first()
         if not existing_test:
             return {"message": "Test ID not found"}, 404
 
         bacteria = existing_test.bacteria_name
+        username = existing_test.username
 
         if "bacteria" in data and data["bacteria"] != existing_test.bacteria_name:
             existing_test.bacteria_name = data["bacteria"]
@@ -872,7 +877,7 @@ class GetDataByTestID(Resource):
             history.save()
         else:
             new_bacteria = bacteria
-        existing_test.username = username
+        # existing_test.username = username
         existing_test.save()
 
         return {
