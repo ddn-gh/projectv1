@@ -11,6 +11,8 @@ const ResultById = () => {
   const [testInfo, setTestInfo] = useState([]);
   const [testResult, setTestResult] = useState([]);
   const { testId } = useParams();
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const date = new Date();
   const day = date.getDate();
