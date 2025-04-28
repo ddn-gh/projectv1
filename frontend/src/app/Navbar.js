@@ -83,7 +83,7 @@ const Navbar = () => {
 
   const handleNavClick = () => {
     setIsOpen(false); // ปิดเมนู
-    window.scrollTo(0, 0); // เลื่อนกลับบนสุด (optional)
+    window.scrollTo(0, 0); // เลื่อนกลับบนสุด 
   };
   const toggleNavbar = () => setIsOpen(!isOpen);
 

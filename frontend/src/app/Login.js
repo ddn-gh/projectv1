@@ -112,7 +112,7 @@ const LoginPage = () => {
     fetch("https://asttestapp.onrender.com/auth/login", requestOptions)
       .then((res) => res.json())
       .then((data) => {
-        console.log(data.access_token);
+        // console.log(data.access_token);
 
         if (data.access_token) {
           login(data.access_token);

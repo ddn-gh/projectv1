@@ -701,6 +701,14 @@ const AddDataName = ({ onShowNumberInput, currentInde, dataLength }) => {
 
       setPreviousAntibiotics(antibioticNames);
       setPreviousAntibioticsOld(antibioticNames);
+
+      // ADD 
+      if (antibioticNames.length === 0) {
+        localStorage.setItem("edit_status", "false");
+      } else {
+        localStorage.setItem("edit_status", "true");
+      }
+      
     } catch (error) {
       console.error("Error fetching antibiotic history:", error);
     } finally {

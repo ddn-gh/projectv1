@@ -135,14 +135,26 @@ class PelletsDetector:
                 break
 
         return np.array(intencities)
-
-    def calculate_trimmed_mean(inten, proportion=0.1):
-        """calculate trimmed mean of each ranged"""
-        return trim_mean(inten, proportion)
     
-    def smooth_1d_profile_adaptive_brightness(profile, window_size=10, sensitivity=0.7, white_floor=150, gray_flat_range=30):
+    def calculate_trimmed_mean(inten, proportion=0.2):  
+        trimmed_values = trim_mean(inten, proportion)
+        filtered_inten = [val for val in inten if 35 <= val <= 255]
+        if len(filtered_inten) == 0:
+            return 0
+        return trim_mean(filtered_inten, proportion)
+    
+    def smooth_image(profile, window_size=10, sensitivity=0.7, white_floor=200):
         smoothed = profile.copy()
         length = len(smoothed)
+
+        global_contrast = np.std(profile)
+        if global_contrast < 10:
+            gray_flat_range = 100  # contrast น้อย smooth เยอะ
+        # elif global_contrast < 20:
+        #     gray_flat_range = 60   # Medium flat
+        else:
+            gray_flat_range = 30
+
         for i in range(1, length):
             prev_val = smoothed[i - 1]
             curr_val = smoothed[i]
@@ -153,10 +165,21 @@ class PelletsDetector:
             local_brightness = np.mean(local_window)
             local_contrast = np.std(local_window)
 
-            brightness_factor = np.exp(-local_brightness / 255)
+            # diff
+            local_diff = np.abs(smoothed[start:end] - np.roll(smoothed[start:end], 1))[1:]
+            avg_local_diff = np.mean(local_diff)
+
+            if avg_local_diff < 10:
+                local_sensitivity = sensitivity * 0.5
+            else:
+                local_sensitivity = sensitivity
+
+            # Adaptive threshold 
+            brightness_factor = np.exp(-local_brightness / 255) 
             contrast_factor = np.clip(local_contrast / 128, 0.1, 1.0)
-            adaptive_threshold = sensitivity * (1.0 + contrast_factor) * brightness_factor * 20
-            
+            adaptive_threshold = local_sensitivity * (1.0 + contrast_factor) * brightness_factor * 10
+
+   
             if abs(curr_val - prev_val) < adaptive_threshold:
                 smoothed[i] = prev_val
             if curr_val > white_floor and curr_val > prev_val:
@@ -196,15 +219,20 @@ class PelletsDetector:
             normalized = cv2.normalize(sharpened, None, 0, 255, cv2.NORM_MINMAX)
             closing_list.append(normalized.astype(np.uint8))
 
+
         intensity_r = []
-        global_closing_list_sort = closing_list
+        # global_closing_list_sort = closing_list
+        # for i in range(len(self.med_loc)):
+        #     global_closing_list_sort[i] = np.sort(closing_list[i])
+        global_closing_list_sort = [np.copy(img) for img in closing_list] 
         for i in range(len(self.med_loc)):
-            global_closing_list_sort[i] = np.sort(closing_list[i])
+            global_closing_list_sort[i] = np.sort(global_closing_list_sort[i], axis=1)  
+
         
         for i in range(len(self.med_loc)):
             raw_intensity = [PelletsDetector.calculate_trimmed_mean(inten) for inten in global_closing_list_sort[i][0:420]]
-            smoothed_intensity = PelletsDetector.smooth_1d_profile_adaptive_brightness(raw_intensity, window_size=5, sensitivity=0.5)
-            intensity_r.append(gaussian_filter1d(smoothed_intensity, sigma=2))
+            smoothed_intensity = PelletsDetector.smooth_image(raw_intensity)
+            intensity_r.append(gaussian_filter1d(smoothed_intensity, sigma=3))
             
         for i in range(len(self.med_loc)):
             img_polar_original = PelletsDetector.img_polar_transfrom(self.img_crop, self.med_loc[i])   
@@ -224,63 +252,76 @@ class PelletsDetector:
             angle_dy = np.diff(angle_y_mavg)
             angle_dy[:self.med_rad[0] + 20] = np.abs(angle_dy[:self.med_rad[0] + 20])
             threshold = np.mean(moving_average(abs(angle_dy), 4)) / np.std(angle_dy) + 0.3
-            # threshold = 0.5
             
             peaks, _ = find_peaks(angle_dy, height=threshold)
             peaks = [int(p) for p in peaks]
-
+            
             if len(peaks) >= 2 and len(peaks) < 10:
                 peaks.sort()
                 highest_peak = max(peaks, key=lambda p: angle_dy[p])
                 
+                # peak ใกล้เกิน อาจเป็น noise
                 second_highest_peak = None
                 for peak in peaks:
-                    if peak > highest_peak and (peak - highest_peak) > 20:
+                    if peak > highest_peak and (peak - highest_peak) > 30:
                         second_highest_peak = peak
                         break
 
                 if second_highest_peak:
                     for peak in peaks:
                         if peak > second_highest_peak and (peak - second_highest_peak) <= 300:
-                            if angle_dy[peak] > angle_dy[second_highest_peak]: 
+                            if angle_dy[peak] > angle_dy[second_highest_peak]:
                                 second_highest_peak = peak
                                 
-                if 500 <= height <= 550 and second_highest_peak is not None and second_highest_peak > 380:
-                    second_highest_peak = highest_peak  
-                    
-                if second_highest_peak and second_highest_peak != highest_peak and height >= 200 and second_highest_peak <= 360:
-                    small_peaks, _ = find_peaks(angle_dy, height=0)
-                    small_peaks = [int(p) for p in small_peaks if angle_dy[p] < threshold]
-                    
-                    avg_value = 0
-                    if small_peaks:
-                        avg_value = sum(angle_dy[p] for p in small_peaks) / len(small_peaks)
-                        selected_peak_value = angle_dy[second_highest_peak]
-                        diff = abs(selected_peak_value - avg_value)
-                        print(f"Medicine {i} - Selected peak value: {selected_peak_value:.3f}")
-                        print(f"Medicine {i} - Difference between selected peak and average: {diff:.3f}")
-                        similarity_threshold = 0.5
-                        if diff < similarity_threshold:
-                            print(f"Medicine {i} - Difference is below threshold using med rad instead")
-                            second_highest_peak = highest_peak
+                # if 500 <= height <= 550 and second_highest_peak is not None and second_highest_peak > 380:
+                #     second_highest_peak = highest_peak  
+                
+                if second_highest_peak and second_highest_peak != highest_peak and height >= 200:
+                    start_idx = max(0, second_highest_peak - 50)
+                    min_prev_value = np.min(angle_dy[start_idx:second_highest_peak])
+                    diff_min_prev = angle_dy[second_highest_peak] - min_prev_value
+
+                    if second_highest_peak > 400 and diff_min_prev < 1:
+                        second_highest_peak = highest_peak
+                    elif second_highest_peak <= 400:  # diff < 0.6 and diff_min_prev < 1
+                        small_peaks, _ = find_peaks(angle_dy, height=0) 
+                        small_peaks = [int(p) for p in small_peaks if angle_dy[p] < threshold] 
+
+                        avg_value = 0
+                        if small_peaks:
+                            avg_value = sum(angle_dy[p] for p in small_peaks) / len(small_peaks)
+                            selected_peak_value = angle_dy[second_highest_peak]
+                            diff = abs(selected_peak_value - avg_value)
+                            diff_min_prev = selected_peak_value - min_prev_value
+                         
+                            similarity_threshold = 0.5
+                            if diff < 0.6 and diff_min_prev < 1:
+                                print(f"Medicine {i} - Both diff ({diff:.2f}) and diff_min_prev ({diff_min_prev:.2f}) are small. Using highest peak.")
+                                second_highest_peak = highest_peak
+                            elif diff < similarity_threshold:
+                                print(f"Medicine {i} - Diff is below threshold ({similarity_threshold}), using highest peak instead")
+                                second_highest_peak = highest_peak
+                         
+                if second_highest_peak and second_highest_peak != highest_peak and second_highest_peak < 200:
+                    if diff <= 0.9:
+                        print(f"Medicine {i} - second_highest_peak ({second_highest_peak}) < 200 and diff <= 0.9. Using highest peak instead.")
+                        second_highest_peak = highest_peak
                             
-               
+                # เกิน threshold มานิดเดียว
                 if second_highest_peak and second_highest_peak != highest_peak:
                     peak_value = angle_dy[second_highest_peak]
-                    if (peak_value - threshold) < 0.1 and (second_highest_peak - highest_peak) <= 200:
+                    # if (peak_value - threshold) < 0.1 and (second_highest_peak - highest_peak) <= 200:
+                    if (peak_value - threshold) < 0.1:
                         second_highest_peak = highest_peak
-    
-                if second_highest_peak and second_highest_peak != highest_peak and second_highest_peak > 405:
+                if second_highest_peak and second_highest_peak != highest_peak and second_highest_peak > 410:
                     second_highest_peak = highest_peak
 
                 if second_highest_peak is None:
                     second_highest_peak = highest_peak
             else:
                 highest_peak = second_highest_peak = self.med_rad[i]  # Fallback to med_rad
-            
 
-            predict_radius = second_highest_peak - self.med_rad[i]
-            
+            predict_radius = second_highest_peak - self.med_rad[i]   
             if second_highest_peak == highest_peak:
                 inhibition_zone_diam.append(6.35)
                 inhibition_zone_pixels.append(self.med_rad[i])
@@ -579,18 +620,22 @@ class AddData(Resource):
             
             username = []
             
+            # try:
+            #     # created_at = datetime.strptime(created_at_str, "%Y-%B-%d %H:%M:%S")
+            #     created_at = datetime.strptime(created_at_str, "%Y-%m-%d %H:%M:%S")
+            #     bk_tz = pytz.timezone("Asia/Bangkok")
+            #     created_at = bk_tz.localize(created_at) 
+            #     created_at = created_at.astimezone(pytz.utc)
+            # except (ValueError, TypeError):
+            #     # created_at = datetime.strptime(created_at_str, "%Y-%B-%d %H:%M:%S")
+            #     created_at = datetime.strptime(created_at_str, "%Y-%m-%d %H:%M:%S")
+            #     bk_tz = pytz.timezone("Asia/Bangkok")
+            #     created_at = bk_tz.localize(created_at) 
+            #     created_at = created_at.astimezone(pytz.utc)
             try:
-                # created_at = datetime.strptime(created_at_str, "%Y-%B-%d %H:%M:%S")
-                created_at = datetime.strptime(created_at_str, "%Y-%m-%d %H:%M:%S")
-                bk_tz = pytz.timezone("Asia/Bangkok")
-                created_at = bk_tz.localize(created_at) 
-                created_at = created_at.astimezone(pytz.utc)
+                created_at = datetime.strptime(created_at_str, "%Y-%B-%d %H:%M:%S")
             except (ValueError, TypeError):
-                # created_at = datetime.strptime(created_at_str, "%Y-%B-%d %H:%M:%S")
-                created_at = datetime.strptime(created_at_str, "%Y-%m-%d %H:%M:%S")
-                bk_tz = pytz.timezone("Asia/Bangkok")
-                created_at = bk_tz.localize(created_at) 
-                created_at = created_at.astimezone(pytz.utc)
+                created_at = datetime.utcnow()
             
             if not all([test_id, bacteria_name, usernameEdit, new_data_points]):
                 missing = []
