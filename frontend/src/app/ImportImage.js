@@ -61,6 +61,15 @@ const ImportImage = () => {
           const imgUrl = URL.createObjectURL(blob); 
           setProcessedImage(imgUrl); 
           setImageData(imgUrl); 
+
+          const medInfoHeader = response.headers.get('med-info');
+          console.log('med-info header:', medInfoHeader);
+          if (medInfoHeader) {
+            const medInfo = JSON.parse(medInfoHeader);
+            console.log('Extracted med-info:', medInfo);
+            localStorage.setItem('medicineInfo', JSON.stringify(medInfo));
+          }
+          
           navigate('/analyze');
         } else {
           setStatus('Image upload failed: ' + response.statusText);

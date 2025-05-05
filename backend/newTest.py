@@ -31,6 +31,9 @@ from sqlalchemy import and_, desc
 import pytz
 from scipy.ndimage import gaussian_filter1d
 
+from google.cloud import vision
+client = vision.ImageAnnotatorClient.from_service_account_file('vision_api.json')
+
 # UPLOAD_FOLDER = "uploads"
 UPLOAD_FOLDER = "/data/uploads"
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg"}
@@ -78,6 +81,32 @@ class PelletsDetector:
                 raw_radius = [self.med_circles[0, i, -1] for i in range(self.med_circles.shape[1])]
                 median_radius = int(np.median(raw_radius))
                 self.med_rad = [median_radius for _ in raw_radius]
+                
+                # add ocr
+                med_result =[]
+                med_name = ["AK", "AMC", "AMP", "ATM", "AZM", "CAZ", "CEC", "CFM", "CFP", "CHL", "CID", "CIN", "CIP", 
+                            "CLR", "CD", "CMZ", "COL", "CPD", "CPR", "CPT", "CRO", "CTB", "CTT", "CTX", "CXM", "CZA", "CFZ",
+                            "CZX", "DAL", "DOR", "DOX", "ENX", "ERY", "ETP", "FEP", "FDC", "F", "FLE", "FOS", "FOX", 
+                            "GAT", "GEM", "CN", "GPFX", "IMR", "IPM", "IMI", "KAN", "LNZ", "LOM", "LOR", "LEV", "MAN", "MEC", "MEM",
+                            "MXF", "MNO", "MOX", "MEV", "NAL", "NET", "NOR", "OFX", "ORI", "PEN", "PEF", "PIP", "PLZ", "PB", "PRL", 
+                            "QDA", "RIF", "SPX", "SPT", "SN", "STR", "SXT", "TCC", "TC", "TEC", "TGC", "TLV", "TMP", "TOB", "TVX", "TZD", "TZP", "VA"]
+                
+                for i, circle in enumerate(self.med_circles[0]):
+                    x, y, r = map(int, circle)  
+                    margin = int(r * 0.9)
+                    x1, y1 = max(x - margin, 0), max(y - margin, 0)
+                    x2, y2 = min(x + margin, self.img_crop.shape[1]), min(y + margin, self.img_crop.shape[0])
+                    roi = self.img_crop[y1:y2, x1:x2]
+                    
+                    preprocessed = PelletsDetector.preprocess_image_for_ocr(roi)
+                    medicine_name, rotated_img = PelletsDetector.ocr_with_rotation_check(preprocessed, med_name)
+
+                    output_img = cv2.cvtColor(rotated_img, cv2.COLOR_GRAY2BGR)
+                    cv2.imwrite(f"ocr_result_{i+1}.png", output_img)
+                    print(f"Matched medicine for crop {i+1}: {medicine_name}")
+                    
+                    med_result.append(medicine_name)
+                    print(med_result)
                 
                 reference_scale_set = False
                 for i, rad in enumerate(self.med_rad):
@@ -475,7 +504,11 @@ class ProcessImage(Resource):
                 return f"Error while decode image {str(e)}", 400
 
             try:
-                image_array = pellets_detector.process_image(image)
+                image_array, med_result = pellets_detector.process_image(image)
+                
+                med_info = [{"med_name": name} for name in med_result]
+                print("med-info header:", json.dumps(med_info))
+                
             except Exception as e:
                 error_message = str(e)
                 logging.error(f"Error during image processing: {error_message}")
@@ -494,7 +527,11 @@ class ProcessImage(Resource):
                 logging.error(f"Error during prediction: {error_message}")
                 return f"Error while process image {str(e)}", 500
 
-            return send_file(img_io, mimetype="image/png")
+            # return send_file(img_io, mimetype="image/png")
+            response = send_file(img_io, mimetype="image/png")
+            response.headers["med-info"] = json.dumps(med_info)
+            response.headers["Access-Control-Expose-Headers"] = "med-info"
+            return response
 
         except Exception as e:
             error_message = str(e)
