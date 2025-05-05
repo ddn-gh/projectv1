@@ -169,7 +169,7 @@ class PelletsDetector:
                 print('MedicineDetector Error',e)
                 return str(e)  
             
-            return self.img_crop
+            return self.img_crop , med_result
         else: return("image not found")
 
     def polar_coord_T(theta, r, cen_p: tuple) -> tuple:
