@@ -30,14 +30,12 @@ import time
 from sqlalchemy import and_, desc
 import pytz
 from scipy.ndimage import gaussian_filter1d
-
 from google.cloud import vision
 client = vision.ImageAnnotatorClient.from_service_account_file('vision_api.json')
 
 # UPLOAD_FOLDER = "uploads"
 UPLOAD_FOLDER = "/data/uploads"
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg"}
-
 
 def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -62,6 +60,50 @@ class PelletsDetector:
         self.med_rad = None
         self.inhibition_zone_diam = None
         self.pellets = None
+        
+    def preprocess_image_for_ocr(image):
+        image = cv2.resize(image, None, fx=2, fy=2, interpolation=cv2.INTER_LINEAR)
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+        image = clahe.apply(image)
+        _, binary = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        
+        white_pixels = cv2.countNonZero(binary)
+        black_pixels = binary.size - white_pixels
+        if black_pixels > white_pixels:
+            binary = cv2.bitwise_not(binary)
+
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (2, 2))
+        processed = cv2.erode(binary, kernel, iterations=1)
+        processed = cv2.dilate(processed, kernel, iterations=1)
+        processed = cv2.morphologyEx(processed, cv2.MORPH_CLOSE, kernel)
+        return processed
+        
+    def ocr_check(image, med_name):
+        best_match = ""
+        best_score = 0
+
+        known_meds = [name.strip().upper() for name in med_name]
+        _, img_encoded = cv2.imencode('.jpg', image)
+        content = img_encoded.tobytes()
+        vision_image = vision.Image(content=content) 
+
+
+        response = client.text_detection(image=vision_image)
+
+        texts = response.text_annotations
+        if texts:
+            raw_text = texts[0].description.strip().upper()
+            cleaned_text = ''.join(c for c in raw_text if c.isalnum()) 
+
+            for med in known_meds:
+                if cleaned_text == med:
+                    return med, image  
+
+                match_score = sum(1 for a, b in zip(cleaned_text, med) if a == b)
+                if match_score > best_score:
+                    best_score = match_score
+                    best_match = med
+        return best_match, image
 
     def process_image(self, image_path):
         if  image_path is not None:
@@ -99,10 +141,9 @@ class PelletsDetector:
                     roi = self.img_crop[y1:y2, x1:x2]
                     
                     preprocessed = PelletsDetector.preprocess_image_for_ocr(roi)
-                    medicine_name, rotated_img = PelletsDetector.ocr_with_rotation_check(preprocessed, med_name)
+                    medicine_name, rotated_img = PelletsDetector.ocr_check(preprocessed, med_name)
 
                     output_img = cv2.cvtColor(rotated_img, cv2.COLOR_GRAY2BGR)
-                    cv2.imwrite(f"ocr_result_{i+1}.png", output_img)
                     print(f"Matched medicine for crop {i+1}: {medicine_name}")
                     
                     med_result.append(medicine_name)
